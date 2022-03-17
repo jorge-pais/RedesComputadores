@@ -78,44 +78,44 @@ int main(int argc, char** argv)
     
     int state=0;
     int i = 0;
-    unsigned char byte = 0;
+    unsigned char rx_byte = 0;
 
     while(state != 5){
-    	read(fd, &byte, 1);
-        printf("received byte: 0x%02x -- state: %d \n", byte, state);
+    	read(fd, &rx_byte, 1);
+        printf("received byte: 0x%02x -- state: %d \n", rx_byte, state);
         switch(state){ //maquina de estados da receção
             case 0:
-            if(byte==FLAG)
+            if(rx_byte==FLAG)
                 state = 1;
             else
                 state = 0;
             break;
                 case 1:
-            if(byte==A)
+            if(rx_byte==A)
                 state = 2;
-            else if(byte==FLAG)
+            else if(rx_byte==FLAG)
                 state = 1;
             else 
                 state = 0;
             break;
             case 2:
-            if(byte==C)
+            if(rx_byte==C)
                 state = 3;
-            else if(byte == FLAG)
+            else if(rx_byte == FLAG)
                 state = 1;
             else
                 state = 0;
             break;
             case 3:
-            if(byte==BCC)
+            if(rx_byte==BCC)
                 state = 4;
-            else if(byte == FLAG)
+            else if(rx_byte == FLAG)
                 state = 1;
             else
                 state = 0;
             break;
             case 4:
-            if(byte == FLAG)
+            if(rx_byte == FLAG)
                 state = 5;
             else
                 state = 0;
