@@ -24,10 +24,7 @@
 volatile int STOP=FALSE;
 
 void timeout();
-static int timeoutFlag, state; // timeoutFlag = 0, no timeout received byte successfully
-                        // timeoutFlag = 1, waiting for SIGALARM while receiving byte stream
-                        // timeoutFlag = 2, connection timed out
-static int timerFlag;
+static int timeoutFlag, timerFlag;
 
 int main(int argc, char** argv)
 {
@@ -96,68 +93,71 @@ int main(int argc, char** argv)
     res = write(fd,buffer,5);   
     printf("%d bytes written\n", res);
 
-    unsigned char byte;
+    unsigned char rx_byte;
 
-    signal(SIGALRM, timeout); //attaches timeout function to interrupt
+    (void) signal(SIGALRM, timeout); //signal handler that calls timeout()
 
-    timeoutFlag = 1;
+    timeoutFlag = 0;
     timerFlag = 1;
-    state = 0;
+    int state = 0;
     
     while(state != 5){
-        /* if(timerFlag){
+        printf("%01d - %01d\n", timeoutFlag, timerFlag);
+        if(timerFlag){
+            printf("Setting SIGALRM for 3 seconds\n");
             alarm(3);
             timerFlag = 0;
-        } */
-        read(fd, &byte, 1);
-        printf("received byte: 0x%02x -- state: %d \n", byte, state);
+        }
+        read(fd, &rx_byte, 1); // ele para aqui ao não ter nada para ler :/
+        printf("received byte: 0x%02x -- state: %d \n", rx_byte, state);
         switch(state){  //maquina de estados da receção
             case 0:
-            if(byte==FLAG)
+            if(rx_byte==FLAG)
                 state = 1;
             else
                 state = 0;
             break;
-                    case 1:
-            if(byte==A)
+            case 1:
+            if(rx_byte==A)
                 state = 2;
-            else if(byte==FLAG)
+            else if(rx_byte==FLAG)
                 state = 1;
             else 
                 state = 0;
             break;
             case 2:
-            if(byte==C)
+            if(rx_byte==C)
                 state = 3;
-            else if(byte == FLAG)
+            else if(rx_byte == FLAG)
                 state = 1;
             else
                 state = 0;
             break;
             case 3:
-            if(byte==BCC)
+            if(rx_byte==BCC)
                 state = 4;
-            else if(byte == FLAG)
+            else if(rx_byte == FLAG)
                 state = 1;
             else
                 state = 0;
             break;
             case 4:
-            if(byte == FLAG){
+            if(rx_byte == FLAG){
                 state = 5;
                 timeoutFlag = 0;
-                signal(SIGALRM, SIG_IGN); // the signal is now ignored 
+                signal(SIGALRM, SIG_IGN); // ignore the signal () 
             }
             else
                 state = 0;
             break;
         }
         
-        /* if(timeoutFlag == 1){
-            res = write(fd,buffer,5);   
+        if(timeoutFlag){ //upon a timeout send SET again
+            printf("about to write again\n");
+            res = write(fd, buffer, 5);   
             printf("%d bytes written\n", res);
             timeoutFlag = 0;
-        } */
+        }
     }
     
     printf("Received UA, closing connection\n");
@@ -179,5 +179,6 @@ int main(int argc, char** argv)
 void timeout(){    
     printf("Connection timeout sending SET again\n");
     timeoutFlag = 1; //mark that there was in fact a timeout
-    timerFlag = 1; //restarts the timer
+    timerFlag = 1;   //restarts the timer
+    return;
 }
