@@ -128,9 +128,6 @@ int main(int argc, char** argv)
     unsigned char buffer[5] = {FLAG, A, C, BCC, FLAG}; 
     res = write(fd,buffer,5);   
     printf("%d bytes written\n", res);
-    
-    /*res = write(fd,buf,255);   
-    printf("%d bytes written\n", res);*/
 
     tcsetattr(fd,TCSANOW,&oldtio);
     close(fd);
