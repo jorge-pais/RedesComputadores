@@ -66,14 +66,10 @@ int main(int argc, char** argv)
     newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
     newtio.c_cc[VMIN]     = 1;   /* blocking read until 5 chars received */
 
-
-
   /* 
     VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
     leitura do(s) pr�ximo(s) caracter(es)
   */
-
-
 
     tcflush(fd, TCIOFLUSH);
 
@@ -85,7 +81,6 @@ int main(int argc, char** argv)
     //
     // AULA
     //
-
     printf("New termios structure set\n");
 
     printf("Sending SET...\n");
@@ -102,13 +97,13 @@ int main(int argc, char** argv)
     int state = 0;
     
     while(state != 5){
-        printf("%01d - %01d\n", timeoutFlag, timerFlag);
+        //printf("%01d - %01d\n", timeoutFlag, timerFlag);
         if(timerFlag){
             printf("Setting SIGALRM for 3 seconds\n");
             alarm(3);
             timerFlag = 0;
         }
-        read(fd, &rx_byte, 1); // ele para aqui ao não ter nada para ler :/
+        read(fd, &rx_byte, 1); // Bug ao usar o socat (cable.c) sem recetor do outro lado
         printf("received byte: 0x%02x -- state: %d \n", rx_byte, state);
         switch(state){  //maquina de estados da receção
             case 0:
@@ -153,7 +148,7 @@ int main(int argc, char** argv)
         }
         
         if(timeoutFlag){ //upon a timeout send SET again
-            printf("about to write again\n");
+            printf("Sending SET again\n");
             res = write(fd, buffer, 5);   
             printf("%d bytes written\n", res);
             timeoutFlag = 0;
@@ -161,11 +156,6 @@ int main(int argc, char** argv)
     }
     
     printf("Received UA, closing connection\n");
-
-    /*
-    for (i = 0; i < 255; i++) {
-      buf[i] = 'a';
-    }*/
 
     if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
         perror("tcsetattr");
