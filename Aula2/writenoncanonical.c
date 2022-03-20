@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 
     unsigned char rx_byte;
 
-    (void) signal(SIGALRM, timeout); //signal handler that calls timeout()
+    (void) signal(SIGALRM, timeout); //signal handler that calls timeout() upon receiving SIGALRM
 
     timeoutFlag = 0;
     timerFlag = 1;
@@ -104,7 +104,7 @@ int main(int argc, char** argv)
             timerFlag = 0;
         }
         read(fd, &rx_byte, 1); // Bug ao usar o socat (cable.c) sem recetor do outro lado
-        printf("received byte: 0x%02x -- state: %d \n", rx_byte, state);
+        //printf("received byte: 0x%02x -- state: %d \n", rx_byte, state);
         switch(state){  //maquina de estados da receção
             case 0:
             if(rx_byte==FLAG)
@@ -140,7 +140,7 @@ int main(int argc, char** argv)
             if(rx_byte == FLAG){
                 state = 5;
                 timeoutFlag = 0;
-                signal(SIGALRM, SIG_IGN); // ignore the signal () 
+                signal(SIGALRM, SIG_IGN); // ignore SIGALRM
             }
             else
                 state = 0;

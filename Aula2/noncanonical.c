@@ -72,13 +72,18 @@ int main(int argc, char** argv)
       exit(-1);
     }
 
-    printf("New termios structure set\n");
-
+    //
     // Inicio da Aula
+    //
+    
+    printf("New termios structure set\n");
     
     int state=0;
     int i = 0;
     unsigned char rx_byte = 0;
+
+    printf("Sleeping 10 sec before reading anything");
+    sleep(10);
 
     while(state != 5){
     	read(fd, &rx_byte, 1);
@@ -90,7 +95,7 @@ int main(int argc, char** argv)
             else
                 state = 0;
             break;
-                case 1:
+            case 1:
             if(rx_byte==A)
                 state = 2;
             else if(rx_byte==FLAG)
@@ -123,7 +128,10 @@ int main(int argc, char** argv)
         }
     }
 
-    printf("Received SET, sending UA...\n");    
+    //printf("Received SET, sending UA...\n");    
+    printf("Received SET, waiting 8 sec...\n");
+    sleep(8);
+    printf("Sending UA... \n");
 
     unsigned char buffer[5] = {FLAG, A, C, BCC, FLAG}; 
     res = write(fd,buffer,5);   
