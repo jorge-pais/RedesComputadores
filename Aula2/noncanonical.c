@@ -72,50 +72,55 @@ int main(int argc, char** argv)
       exit(-1);
     }
 
-    printf("New termios structure set\n");
-
+    //
     // Inicio da Aula
+    //
+    
+    printf("New termios structure set\n");
     
     int state=0;
     int i = 0;
-    unsigned char byte = 0;
+    unsigned char rx_byte = 0;
+
+    printf("Sleeping 10 sec before reading anything");
+    sleep(10);
 
     while(state != 5){
-    	read(fd, &byte, 1);
-        printf("received byte: 0x%02x -- state: %d \n", byte, state);
+    	read(fd, &rx_byte, 1);
+        printf("received byte: 0x%02x -- state: %d \n", rx_byte, state);
         switch(state){ //maquina de estados da receção
             case 0:
-            if(byte==FLAG)
+            if(rx_byte==FLAG)
                 state = 1;
             else
                 state = 0;
             break;
-                case 1:
-            if(byte==A)
+            case 1:
+            if(rx_byte==A)
                 state = 2;
-            else if(byte==FLAG)
+            else if(rx_byte==FLAG)
                 state = 1;
             else 
                 state = 0;
             break;
             case 2:
-            if(byte==C)
+            if(rx_byte==C)
                 state = 3;
-            else if(byte == FLAG)
+            else if(rx_byte == FLAG)
                 state = 1;
             else
                 state = 0;
             break;
             case 3:
-            if(byte==BCC)
+            if(rx_byte==BCC)
                 state = 4;
-            else if(byte == FLAG)
+            else if(rx_byte == FLAG)
                 state = 1;
             else
                 state = 0;
             break;
             case 4:
-            if(byte == FLAG)
+            if(rx_byte == FLAG)
                 state = 5;
             else
                 state = 0;
@@ -123,14 +128,14 @@ int main(int argc, char** argv)
         }
     }
 
-    printf("Received SET, sending UA...\n");    
+    //printf("Received SET, sending UA...\n");    
+    printf("Received SET, waiting 8 sec...\n");
+    sleep(8);
+    printf("Sending UA... \n");
 
     unsigned char buffer[5] = {FLAG, A, C, BCC, FLAG}; 
     res = write(fd,buffer,5);   
     printf("%d bytes written\n", res);
-    
-    /*res = write(fd,buf,255);   
-    printf("%d bytes written\n", res);*/
 
     tcsetattr(fd,TCSANOW,&oldtio);
     close(fd);
