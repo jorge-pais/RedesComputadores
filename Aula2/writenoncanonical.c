@@ -109,10 +109,10 @@ int main(int argc, char** argv)
             timerFlag = 0;
         }
         res = read(fd, &rx_byte, 1); // Bug ao usar o socat (cable.c) sem recetor do outro lado
-        if(res) // Only print if received
+        if(res){  // Only print if received
             printf("received byte: 0x%02x -- state: %d \n", rx_byte, state);
-        
-        switch(state){  //maquina de estados da receção
+
+            switch(state){  //maquina de estados da receção
             case 0:
             if(rx_byte==FLAG)
                 state = 1;
@@ -152,7 +152,10 @@ int main(int argc, char** argv)
             else
                 state = 0;
             break;
-        }
+            }
+        } 
+        
+        
         
         if(timeoutFlag){ //upon a timeout send SET again
             res = write(fd, buffer, 5);   
