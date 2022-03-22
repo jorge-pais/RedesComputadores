@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <signal.h>
 
 #define BAUDRATE B9600
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
@@ -20,6 +21,8 @@
 #define BCC A^C
 
 volatile int STOP=FALSE;
+
+static int timerFlag, timeoutFlag, timeoutCount;
 
 int main(int argc, char** argv)
 {
@@ -57,8 +60,8 @@ int main(int argc, char** argv)
     /* set input mode (non-canonical, no echo,...) */
     newtio.c_lflag = 0;
 
-    newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
-    newtio.c_cc[VMIN]     = 1;   /* blocking read until 5 chars received */
+    newtio.c_cc[VTIME]    = 30;   /* inter-character timer unused */
+    newtio.c_cc[VMIN]     = 0;   /* blocking read until 5 chars received */
 
   /* 
     VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
@@ -79,15 +82,76 @@ int main(int argc, char** argv)
     printf("New termios structure set\n");
     
     int state=0;
-    int i = 0;
     unsigned char rx_byte = 0;
+    timerFlag = 1; timeoutFlag = 0; timeoutCount = 0;
 
-    printf("Sleeping 10 sec before reading anything");
-    sleep(10);
+    /* printf("Sleeping 10 sec before reading anything\n");
+    sleep(10); */
 
-    while(state != 5){
-    	read(fd, &rx_byte, 1);
-        printf("received byte: 0x%02x -- state: %d \n", rx_byte, state);
+    //É necessario continuar a retransmitir até deixar de receber SET
+    while(TRUE){
+        while(state != 5){
+            res = read(fd, &rx_byte, 1);
+            if(res)
+                printf("received byte: 0x%02x -- state: %d \n", rx_byte, state);
+            else
+                break;
+            switch(state){ //maquina de estados da receção
+                case 0:
+                if(rx_byte==FLAG)
+                    state = 1;
+                else
+                    state = 0;
+                break;
+                case 1:
+                if(rx_byte==A)
+                    state = 2;
+                else if(rx_byte==FLAG)
+                    state = 1;
+                else 
+                    state = 0;
+                break;
+                case 2:
+                if(rx_byte==C)
+                    state = 3;
+                else if(rx_byte == FLAG)
+                    state = 1;
+                else
+                    state = 0;
+                break;
+                case 3:
+                if(rx_byte==BCC)
+                    state = 4;
+                else if(rx_byte == FLAG)
+                    state = 1;
+                else
+                    state = 0;
+                break;
+                case 4:
+                if(rx_byte == FLAG)
+                    state = 5;
+                else
+                    state = 0;
+                break;
+            }
+        }
+
+        if(res == 0) break; //If nothing has been read for longer than 3 seconds
+
+        if(state == 5){
+            printf("Received SET, sending UA...\n");
+            unsigned char buffer[5] = {FLAG, A, C, BCC, FLAG}; 
+            res = write(fd,buffer,5);   
+            printf("%d bytes written\n", res);
+            state = 0;
+        }
+    }
+
+    /* while(state != 5){
+        res = read(fd, &rx_byte, 1);
+        if(res)
+            printf("received byte: 0x%02x -- state: %d \n", rx_byte, state);
+        
         switch(state){ //maquina de estados da receção
             case 0:
             if(rx_byte==FLAG)
@@ -126,16 +190,9 @@ int main(int argc, char** argv)
                 state = 0;
             break;
         }
-    }
+    } */
 
-    //printf("Received SET, sending UA...\n");    
-    printf("Received SET, waiting 8 sec...\n");
-    sleep(8);
-    printf("Sending UA... \n");
-
-    unsigned char buffer[5] = {FLAG, A, C, BCC, FLAG}; 
-    res = write(fd,buffer,5);   
-    printf("%d bytes written\n", res);
+    printf("Nothing received for 3 sec, closing connection\n");
 
     tcsetattr(fd,TCSANOW,&oldtio);
     close(fd);

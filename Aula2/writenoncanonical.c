@@ -21,10 +21,12 @@
 #define BCC A^C
 #define FLAG 0x7E
 
+#define maxTimeoutCount 3
+
 volatile int STOP=FALSE;
 
 void timeout();
-static int timeoutFlag, timerFlag;
+static int timeoutFlag, timerFlag, timeoutCount;
 
 int main(int argc, char** argv)
 {
@@ -63,8 +65,9 @@ int main(int argc, char** argv)
     /* set input mode (non-canonical, no echo,...) */
     newtio.c_lflag = 0;
 
-    newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
-    newtio.c_cc[VMIN]     = 1;   /* blocking read until 5 chars received */
+    //Vtime 
+    newtio.c_cc[VTIME]    = 0;   /* inter-character timer */
+    newtio.c_cc[VMIN]     = 0;   /* minimum number of characters to satisfy read() */
 
   /* 
     VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
@@ -83,6 +86,7 @@ int main(int argc, char** argv)
     //
     printf("New termios structure set\n");
 
+    // First send
     printf("Sending SET...\n");
     unsigned char buffer[5] = {FLAG, A, C, BCC, FLAG}; 
     res = write(fd,buffer,5);   
@@ -93,18 +97,21 @@ int main(int argc, char** argv)
     (void) signal(SIGALRM, timeout); //signal handler that calls timeout() upon receiving SIGALRM
 
     timeoutFlag = 0;
+    timeoutCount = 0;
     timerFlag = 1;
     int state = 0;
     
-    while(state != 5){
+    while(state != 5 && timeoutCount <= maxTimeoutCount){
         //printf("%01d - %01d\n", timeoutFlag, timerFlag);
         if(timerFlag){
             printf("Setting SIGALRM for 3 seconds\n");
             alarm(3);
             timerFlag = 0;
         }
-        read(fd, &rx_byte, 1); // Bug ao usar o socat (cable.c) sem recetor do outro lado
-        //printf("received byte: 0x%02x -- state: %d \n", rx_byte, state);
+        res = read(fd, &rx_byte, 1); // Bug ao usar o socat (cable.c) sem recetor do outro lado
+        if(res) // Only print if received
+            printf("received byte: 0x%02x -- state: %d \n", rx_byte, state);
+        
         switch(state){  //maquina de estados da receção
             case 0:
             if(rx_byte==FLAG)
@@ -148,14 +155,16 @@ int main(int argc, char** argv)
         }
         
         if(timeoutFlag){ //upon a timeout send SET again
-            printf("Sending SET again\n");
             res = write(fd, buffer, 5);   
             printf("%d bytes written\n", res);
             timeoutFlag = 0;
         }
     }
     
-    printf("Received UA, closing connection\n");
+    if(state == 5)
+        printf("Received UA, closing connection\n");
+    else
+        printf("No response received, closing connection\n");
 
     if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
         perror("tcsetattr");
@@ -166,9 +175,14 @@ int main(int argc, char** argv)
     return 0;
 }
 
-void timeout(){    
+void timeout(){
+    timeoutCount++;
+    timerFlag = 1;          //restarts the timer
+    if(timeoutCount <= maxTimeoutCount)
+        timeoutFlag = 1;    //mark that there was in fact a timeout
+    else
+        return;
+
     printf("Connection timeout sending SET again\n");
-    timeoutFlag = 1; //mark that there was in fact a timeout
-    timerFlag = 1;   //restarts the timer
     return;
 }
