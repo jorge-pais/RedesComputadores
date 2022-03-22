@@ -88,7 +88,7 @@ int main(int argc, char** argv)
     /* printf("Sleeping 10 sec before reading anything\n");
     sleep(10); */
 
-    //É necessario continuar a retransmitir até deixar de receber SET
+    //Se for necessario continuar a retransmitir até deixar de receber SET
     /* while(TRUE){
         while(state != 5){
             res = read(fd, &rx_byte, 1);
