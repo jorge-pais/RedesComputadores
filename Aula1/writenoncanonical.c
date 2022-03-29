@@ -20,7 +20,7 @@ int main(int argc, char** argv)
     struct termios oldtio,newtio;
     char buf[255];
     int i, sum = 0, speed = 0;
-    
+    /*
     if ( (argc < 2) || 
   	     ((strcmp("/dev/ttyS10", argv[1])!=0) && 
   	      (strcmp("/dev/ttyS11", argv[1])!=0) )) {
@@ -28,7 +28,7 @@ int main(int argc, char** argv)
       exit(1);
     }
 
-
+  */
   /*
     Open serial port device for reading and writing and not as controlling tty
     because we don't want to get killed if linenoise sends CTRL-C.
