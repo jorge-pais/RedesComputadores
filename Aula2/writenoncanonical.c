@@ -108,54 +108,52 @@ int main(int argc, char** argv)
             alarm(3);
             timerFlag = 0;
         }
-        res = read(fd, &rx_byte, 1); // Bug ao usar o socat (cable.c) sem recetor do outro lado
+        res = read(fd, &rx_byte, 1);
         if(res){  // Only print if received
             printf("received byte: 0x%02x -- state: %d \n", rx_byte, state);
 
             switch(state){  //maquina de estados da receção
-            case 0:
-            if(rx_byte==FLAG)
-                state = 1;
-            else
-                state = 0;
-            break;
-            case 1:
-            if(rx_byte==A)
-                state = 2;
-            else if(rx_byte==FLAG)
-                state = 1;
-            else 
-                state = 0;
-            break;
-            case 2:
-            if(rx_byte==C)
-                state = 3;
-            else if(rx_byte == FLAG)
-                state = 1;
-            else
-                state = 0;
-            break;
-            case 3:
-            if(rx_byte==BCC)
-                state = 4;
-            else if(rx_byte == FLAG)
-                state = 1;
-            else
-                state = 0;
-            break;
-            case 4:
-            if(rx_byte == FLAG){
-                state = 5;
-                timeoutFlag = 0;
-                signal(SIGALRM, SIG_IGN); // ignore SIGALRM
-            }
-            else
-                state = 0;
-            break;
+                case 0:
+                if(rx_byte==FLAG)
+                    state = 1;
+                else
+                    state = 0;
+                break;
+                case 1:
+                if(rx_byte==A)
+                    state = 2;
+                else if(rx_byte==FLAG)
+                    state = 1;
+                else 
+                    state = 0;
+                break;
+                case 2:
+                if(rx_byte==C)
+                    state = 3;
+                else if(rx_byte == FLAG)
+                    state = 1;
+                else
+                    state = 0;
+                break;
+                case 3:
+                if(rx_byte==BCC)
+                    state = 4;
+                else if(rx_byte == FLAG)
+                    state = 1;
+                else
+                    state = 0;
+                break;
+                case 4:
+                if(rx_byte == FLAG){
+                    state = 5;
+                    timeoutFlag = 0;
+                    signal(SIGALRM, SIG_IGN); // ignore SIGALRM
+                }
+                else
+                    state = 0;
+                break;
             }
         } 
-        
-        
         
         if(timeoutFlag){ //upon a timeout send SET again
             res = write(fd, buffer, 5);   

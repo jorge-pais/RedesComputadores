@@ -24,6 +24,9 @@ volatile int STOP=FALSE;
 
 static int timerFlag, timeoutFlag, timeoutCount;
 
+
+int llopen(int porta, int flag);
+
 int main(int argc, char** argv)
 {
     int fd,c, res;
@@ -89,52 +92,7 @@ int main(int argc, char** argv)
     sleep(10); */
 
     //Se for necessario continuar a retransmitir até deixar de receber SET
-    /* while(TRUE){
-        while(state != 5){
-            res = read(fd, &rx_byte, 1);
-            if(res)
-                printf("received byte: 0x%02x -- state: %d \n", rx_byte, state);
-            else
-                break;
-            switch(state){ //maquina de estados da receção
-                case 0:
-                if(rx_byte==FLAG)
-                    state = 1;
-                else
-                    state = 0;
-                break;
-                case 1:
-                if(rx_byte==A)
-                    state = 2;
-                else if(rx_byte==FLAG)
-                    state = 1;
-                else 
-                    state = 0;
-                break;
-                case 2:
-                if(rx_byte==C)
-                    state = 3;
-                else if(rx_byte == FLAG)
-                    state = 1;
-                else
-                    state = 0;
-                break;
-                case 3:
-                if(rx_byte==BCC)
-                    state = 4;
-                else if(rx_byte == FLAG)
-                    state = 1;
-                else
-                    state = 0;
-                break;
-                case 4:
-                if(rx_byte == FLAG)
-                    state = 5;
-                else
-                    state = 0;
-                break;
-            }
-        }while(TRUE){
+    while(TRUE){
         while(state != 5){
             res = read(fd, &rx_byte, 1);
             if(res)
@@ -180,7 +138,6 @@ int main(int argc, char** argv)
                 break;
             }
         }
-
         if(res == 0) break; //If nothing has been read for longer than 3 seconds
 
         if(state == 5){
@@ -192,18 +149,7 @@ int main(int argc, char** argv)
         }
     }
 
-        if(res == 0) break; //If nothing has been read for longer than 3 seconds
-
-        if(state == 5){
-            printf("Received SET, sending UA...\n");
-            unsigned char buffer[5] = {FLAG, A, C, BCC, FLAG}; 
-            res = write(fd,buffer,5);   
-            printf("%d bytes written\n", res);
-            state = 0;
-        }
-    } */
-
-    while(state != 5){
+    /* while(state != 5){
         res = read(fd, &rx_byte, 1);
         if(res)
             printf("received byte: 0x%02x -- state: %d \n", rx_byte, state);
@@ -250,7 +196,7 @@ int main(int argc, char** argv)
     printf("Received SET, sending UA...\n");
     unsigned char buffer[5] = {FLAG, A, C, BCC, FLAG}; 
     res = write(fd,buffer,5);   
-    printf("%d bytes written\n", res); 
+    printf("%d bytes written\n", res);  */
 
     tcsetattr(fd,TCSANOW,&oldtio);
     close(fd);
