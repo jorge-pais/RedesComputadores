@@ -1,0 +1,3 @@
+#define ROLE_TRANSMITTER 0
+#define ROLE_RECEIVER 1
+
