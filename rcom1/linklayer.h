@@ -48,11 +48,7 @@ int llread(char* packet);
 int llclose(int showStatistics);
 
 
-<<<<<<< HEAD
 #endif
 
 
 
-=======
-#endif
->>>>>>> 19b9a5f (all new, fun and broken code)
