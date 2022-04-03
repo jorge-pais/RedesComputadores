@@ -4,6 +4,10 @@
 // Globally declared termios structures
 static struct termios oldtio, newtio;
 
+/*
+Configure serial port terminal I/O
+The same code can be used for the transmitter
+*/
 int configureSerialterminal(linkLayer connectionParameters){
 
     int fd = open(connectionParameters.serialPort, O_RDWR | O_NOCTTY);
@@ -41,6 +45,12 @@ int configureSerialterminal(linkLayer connectionParameters){
     return fd;
 }
 
+/* 
+De momento este codigo é a implementação da maquina de estados
+da segunda aula. Como toda a receção de tramas vai precisar de 
+um mecanismo bastante similar, é preciso adaptar para ser uma
+função independente
+*/
 int receiver_llopen(linkLayer connectionParameters){
 
     int fd = configureSerialterminal(connectionParameters);
