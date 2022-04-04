@@ -13,11 +13,22 @@ Open logical connection on the receiver end
 */
 int receiver_llopen(linkLayer connectionParameters){
 
-    int fd = configureSerialterminal(connectionParameters);
+    rx_fd = configureSerialterminal(connectionParameters);
 
-    unsigned char cmdSet[] = {FLAG, A_tx, C_SET};
+    unsigned char cmdSet[] = {FLAG, A_tx, C_SET, A_tx ^ C_UA, FLAG};
 
-    getCommand(fd, cmdSet, 3);
+    if(getCommand(rx_fd, cmdSet, 3) < 0){
+        perror("Haven't received SET");
+        return -1;
+    }
+    printf("Received SET sending UA");
+
+    unsigned char cmdUA[] = {FLAG, A_tx, C_UA, A_tx ^ C_UA, FLAG};
+
+    if(write(rx_fd, cmdUA, 5) < 0){
+        perror("Error writing to serial port");
+        return -1;
+    }
 
     return 0;
 }
