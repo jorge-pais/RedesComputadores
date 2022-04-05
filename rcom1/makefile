@@ -1,5 +1,8 @@
 CC = gcc
-C_FLAGS = -g -w
+C_FLAGS = -g -Wall
 
 all:
-	$(CC) *.c
+	$(CC) $(C_FLAGS) test.c linklayer.c utils.c -o testApp
+
+clean:
+	rm testApp

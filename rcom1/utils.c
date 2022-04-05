@@ -48,8 +48,11 @@ int configureSerialterminal(linkLayer connectionParameters){
 }
 
 /*
-Try to read the header for a given frame, returns 0 if the header has
-been read, returns -1 if nothing could be read
+Try to read the header for a given frame, 
+Return values:
+    1   - the command was read successfully
+    0   - couldn´t read anything
+    -1  - error while reading
 */
 int getCommand(int fd, unsigned char *cmd, int cmdLen){
     int state = 0, res;
@@ -85,7 +88,7 @@ int getCommand(int fd, unsigned char *cmd, int cmdLen){
                 state = 0;
             break;
             case 3:
-            if(rx_byte == cmd[1]^cmd[2]) //BCC1
+            if(rx_byte == (cmd[1]^cmd[2])) //BCC1
                 state = 4;
             else if(rx_byte == cmd[0])
                 state = 1;
@@ -100,8 +103,11 @@ int getCommand(int fd, unsigned char *cmd, int cmdLen){
             break;
         }
     }
-    if(state == 5)
-        return 0;
-    else
+    if(state == 5) //everything OK, we happy
+        return 1;
+    else if(res < 0) //somekind of error
         return -1;
+    
+    //didn't receive what was expected
+    return 0;
 }

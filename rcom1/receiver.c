@@ -21,7 +21,7 @@ int receiver_llopen(linkLayer connectionParameters){
         perror("Haven't received SET");
         return -1;
     }
-    printf("Received SET sending UA");
+    printf("Received SET, sending UA\n");
 
     unsigned char cmdUA[] = {FLAG, A_tx, C_UA, A_tx ^ C_UA, FLAG};
 
@@ -33,6 +33,9 @@ int receiver_llopen(linkLayer connectionParameters){
     return 0;
 }
 
-int receiver_llclose();
+int receiver_llclose(){
+
+    return 0;
+}
 
 #endif
