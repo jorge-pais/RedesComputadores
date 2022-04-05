@@ -1,16 +1,10 @@
-#ifndef RECEIVER_
-#define RECEIVER_
-
-#include "utils.h"
+#include "receiver.h"
 
 /* 
 Globally declared serial terminal file descriptor
 */
 static int rx_fd;
 
-/* 
-Open logical connection on the receiver end
-*/
 int receiver_llopen(linkLayer connectionParameters){
 
     rx_fd = configureSerialterminal(connectionParameters);
@@ -37,5 +31,3 @@ int receiver_llclose(){
 
     return 0;
 }
-
-#endif

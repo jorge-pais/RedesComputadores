@@ -1,5 +1,5 @@
-#ifndef DEFINITIONS
-#define DEFINITIONS
+#ifndef DEFINITIONS_H
+#define DEFINITIONS_H
 
 //Frame formats
 #define FLAG        0x7E    //0b01111110

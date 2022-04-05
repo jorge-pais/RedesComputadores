@@ -5,4 +5,4 @@ all:
 	$(CC) $(C_FLAGS) test.c linklayer.c utils.c -o testApp
 
 clean:
-	rm testApp
+	rm testApp a.out

@@ -1,10 +1,10 @@
 #include "linklayer.h"
-#include "transmitter.c"
-#include "receiver.c"
+#include "transmitter.h"
+#include "receiver.h"
 #include "utils.h"
 
 int llopen(linkLayer connectionParameters){
-
+    
     if(connectionParameters.role == TRANSMITTER){
         return transmitter_llopen(connectionParameters);
     }

@@ -1,14 +1,7 @@
 #include "utils.h"
 
-/*  
-Globally declared termios structures, and serial terminal 
-file descriptor
-*/
 static struct termios oldtio, newtio;
 
-/*
-Configure serial port terminal I/O
-*/
 int configureSerialterminal(linkLayer connectionParameters){
 
     int fd = open(connectionParameters.serialPort, O_RDWR | O_NOCTTY);
@@ -27,7 +20,7 @@ int configureSerialterminal(linkLayer connectionParameters){
     //Configure serial port connection
     bzero(&newtio, sizeof(newtio));
     //newtio.c_cflag = connectionParameters.baudRate | CS8 | CLOCAL | CREAD;
-    newtio.c_cflag = BAUDRATE_DEFAULT | CS8 | CLOCAL | CREAD;
+    newtio.c_cflag = CS8 | CLOCAL | CREAD;
     newtio.c_iflag = IGNPAR;
     newtio.c_oflag = 0; 
 
@@ -47,13 +40,6 @@ int configureSerialterminal(linkLayer connectionParameters){
     return fd;
 }
 
-/*
-Try to read the header for a given frame, 
-Return values:
-    1   - the command was read successfully
-    0   - couldn´t read anything
-    -1  - error while reading
-*/
 int getCommand(int fd, unsigned char *cmd, int cmdLen){
     int state = 0, res;
     unsigned char rx_byte;
@@ -66,7 +52,7 @@ int getCommand(int fd, unsigned char *cmd, int cmdLen){
             break;
         switch(state){ //State machine
             case 0:
-            if(rx_byte==cmd[0]) //Flag
+            if(rx_byte==cmd[0]) //FLAG
                 state = 1;
             else
                 state = 0;
@@ -110,4 +96,16 @@ int getCommand(int fd, unsigned char *cmd, int cmdLen){
     
     //didn't receive what was expected
     return 0;
+}
+
+int *byteStuffing(unsigned char *data, int dataSize, int *outputDataSize){
+    if(data == NULL || outputDataSize == NULL){
+        printf("one or more parameters are invalid\n");
+        return NULL;
+    }
+    
+}
+
+int convertBaudRate(int baud){
+    return BAUDRATE_DEFAULT;
 }

@@ -1,21 +1,14 @@
-#ifndef TRANSMITTER_
-#define TRANSMITTER_
-
-#include "utils.h"
-
-void timeOut();
+#include "transmitter.h"
 
 //static struct termios oldtio, newtio;
 static int tx_fd;
-u_int8_t timeoutFlag, timerFlag;
+u_int8_t timeoutFlag, timerFlag,timeoutCount;
 
 int transmitter_llopen(linkLayer connectionParameters){
 
     tx_fd = configureSerialterminal(connectionParameters);
 
-    printf("%d \n", newtio.c_cc[VTIME]);
-
-    int timeoutCount = 0;
+    //printf("%d \n", newtio.c_cc[VTIME]);
 
     // SET frame header
     unsigned char cmdSet[] = {FLAG, A_tx, C_SET, A_tx ^ C_SET, FLAG};
@@ -70,5 +63,3 @@ void timeOut(){
     timeoutFlag = 1;    //indicate there was a timeout
     timerFlag = 1;      //restart the timer 
 }
-
-#endif
