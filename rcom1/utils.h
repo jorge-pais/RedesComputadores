@@ -12,6 +12,7 @@ static struct termios oldtio, newtio;
 
 int configureSerialterminal(linkLayer connectionParameters);
 int getCommand(int fd, unsigned char *cmd, int cmdLen);
+int getInfoCommand(int fd, unsigned char *cmd, int cmdLen);
 
 //transmitter stuff
 int transmitter_llopen(linkLayer connectionParameters);

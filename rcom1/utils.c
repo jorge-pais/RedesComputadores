@@ -103,6 +103,7 @@ int getCommand(int fd, unsigned char *cmd, int cmdLen){
             break;
         }
     }
+
     if(state == 5) //everything OK, we happy
         return 1;
     else if(res < 0) //somekind of error
@@ -111,3 +112,62 @@ int getCommand(int fd, unsigned char *cmd, int cmdLen){
     //didn't receive what was expected
     return 0;
 }
+
+/*
+State machine similar to getCommand() but exclusively used to read Information Frames
+
+Return values:
+    1   - the command was read successfully
+    0   - couldn´t read anything
+    -1  - error while reading
+*/
+int getInfoCommand(int fd, unsigned char *cmd, int cmdLen){
+        int state = 0, res;
+        unsigned char rx_byte;
+
+        while(state != 5){
+            res = read(fd, &rx_byte, 1);
+            if(res > 0) //Something was read
+                printf("received byte: 0x%02x -- state: %d \n", rx_byte, state);
+            else //Nothing has been read or some kind of error
+                break;
+            switch(state){ //State machine
+                case 0:
+                if(rx_byte==cmd[0]) //Flag
+                    state = 1;
+                else
+                    state = 0;
+                break;
+                case 1:
+                if(rx_byte==cmd[1]) //Address field
+                    state = 2;
+                else if(rx_byte==cmd[0])
+                    state = 1;
+                else 
+                    state = 0;
+                break;
+                case 2:
+                if(rx_byte==cmd[2]) //Control field
+                    state = 3;
+                else if(rx_byte == cmd[0])
+                    state = 1;
+                else
+                    state = 0;
+                break;
+                case 3:
+                if(rx_byte == (cmd[1]^cmd[2])) //BCC1
+                    state = 4;
+                else if(rx_byte == cmd[0])
+                    state = 1;
+                else
+                    state = 0;
+                break;
+                case 4:
+                if(rx_byte == cmd[0]) //FLAG
+                    state = 5;
+                else
+                    state = 0;
+                break;
+            }
+        }
+    }
