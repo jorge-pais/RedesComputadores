@@ -1,7 +1,4 @@
-#ifndef RECEIVER_
-#define RECEIVER_
-
-#include "utils.h"
+#include "receiver.h"
 
 /* 
 Globally declared serial terminal file descriptor
@@ -9,9 +6,6 @@ Globally declared serial terminal file descriptor
 static int rx_fd;
 u_int8_t timeoutFlag, timerFlag;
 
-/* 
-Open logical connection on the receiver end
-*/
 int receiver_llopen(linkLayer connectionParameters){
 
     rx_fd = configureSerialterminal(connectionParameters);
@@ -35,7 +29,6 @@ int receiver_llopen(linkLayer connectionParameters){
 }
 
 int receiver_llclose(linkLayer connectionParameters){
-
     // DISC frame header
     unsigned char cmdDisc[] = {FLAG, A_tx, C_DISC, A_tx ^ C_DISC, FLAG};
     // UA frame header expected to receive
@@ -97,5 +90,3 @@ void timeOut(){
     timeoutFlag = 1;    //indicate there was a timeout
     timerFlag = 1;      //restart the timer 
 }
-
-#endif

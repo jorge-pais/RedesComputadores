@@ -1,8 +1,12 @@
 CC = gcc
-C_FLAGS = -g -Wall
+C_FLAGS = -g -Wall -pipe 
 
 all:
-	$(CC) $(C_FLAGS) test.c linklayer.c utils.c -o testApp
+	$(CC) $(C_FLAGS) *.c -o testApp
+
+test:
+	$(CC) $(C_FLAGS) *.c -c 
 
 clean:
-	rm testApp
+	rm -f testApp a.out
+	rm -f *.o

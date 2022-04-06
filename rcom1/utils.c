@@ -1,14 +1,7 @@
 #include "utils.h"
 
-/*  
-Globally declared termios structures, and serial terminal 
-file descriptor
-*/
 static struct termios oldtio, newtio;
 
-/*
-Configure serial port terminal I/O
-*/
 int configureSerialterminal(linkLayer connectionParameters){
 
     int fd = open(connectionParameters.serialPort, O_RDWR | O_NOCTTY);
@@ -27,7 +20,7 @@ int configureSerialterminal(linkLayer connectionParameters){
     //Configure serial port connection
     bzero(&newtio, sizeof(newtio));
     //newtio.c_cflag = connectionParameters.baudRate | CS8 | CLOCAL | CREAD;
-    newtio.c_cflag = BAUDRATE_DEFAULT | CS8 | CLOCAL | CREAD;
+    newtio.c_cflag = CS8 | CLOCAL | CREAD;
     newtio.c_iflag = IGNPAR;
     newtio.c_oflag = 0; 
 
@@ -46,7 +39,6 @@ int configureSerialterminal(linkLayer connectionParameters){
 
     return fd;
 }
-
 
 /*
 Close Serial Port Terminal connection upon llclose()
@@ -67,7 +59,6 @@ int closeSerialterminal(int fd){
     return 1;
 }
 
-
 /*
 Try to read the header for a given frame, 
 Return values:
@@ -87,7 +78,7 @@ int getCommand(int fd, unsigned char *cmd, int cmdLen){
             break;
         switch(state){ //State machine
             case 0:
-            if(rx_byte==cmd[0]) //Flag
+            if(rx_byte==cmd[0]) //FLAG
                 state = 1;
             else
                 state = 0;
@@ -192,4 +183,8 @@ int getInfoCommand(int fd, unsigned char *cmd, int cmdLen){
     
     //didn't receive what was expected
     return 0;
+}
+
+int convertBaudRate(int baud){
+    return BAUDRATE_DEFAULT;
 }
