@@ -16,6 +16,7 @@ int getInfoCommand(int fd, unsigned char *cmd, int cmdLen);
 
 //transmitter stuff
 int transmitter_llopen(linkLayer connectionParameters);
+int transmitter_llclose();
 void timeOut();
 
 //receiver stuff
