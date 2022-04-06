@@ -98,14 +98,6 @@ int getCommand(int fd, unsigned char *cmd, int cmdLen){
     return 0;
 }
 
-int *byteStuffing(unsigned char *data, int dataSize, int *outputDataSize){
-    if(data == NULL || outputDataSize == NULL){
-        printf("one or more parameters are invalid\n");
-        return NULL;
-    }
-    
-}
-
 int convertBaudRate(int baud){
     return BAUDRATE_DEFAULT;
 }

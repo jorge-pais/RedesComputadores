@@ -58,6 +58,13 @@ int transmitter_llopen(linkLayer connectionParameters){
     return -1;
 }
 
+int *byteStuffing(unsigned char *data, int dataSize, int *outputDataSize){
+    if(data == NULL || outputDataSize == NULL){
+        printf("one or more parameters are invalid\n");
+        return NULL;
+    }   
+}
+
 void timeOut(){
     printf("Connection timeout\n");
     timeoutFlag = 1;    //indicate there was a timeout

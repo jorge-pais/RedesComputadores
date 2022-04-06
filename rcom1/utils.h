@@ -35,13 +35,5 @@ Mudar nome da função maybe,
 Commands são o I, SET, DISC; Replies são o UA, RR, REJ
 */
 int getCommand(int fd, unsigned char *cmd, int cmdLen);
-/*
-Perform a byte stuffing operation on vector data
-
-Return values:
-    pointer to a new vector 
-    NULL - somekind of error
-*/
-int *byteStuffing(unsigned char *data, int dataSize, int *outputDataSize);
 
 #endif
