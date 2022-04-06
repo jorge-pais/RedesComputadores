@@ -20,15 +20,6 @@ int closeSerialterminal(int fd);
 int getCommand(int fd, unsigned char *cmd, int cmdLen);
 int getInfoCommand(int fd, unsigned char *cmd, int cmdLen);
 
-//transmitter stuff
-int transmitter_llopen(linkLayer connectionParameters);
-int transmitter_llclose(linkLayer connectionParameters);
-void timeOut();
-
-//receiver stuff
-int receiver_llopen(linkLayer connectionParameters);
-int receiver_llclose(linkLayer connectionParameters);
-
 /*
 Convert an integer baudrate to something that termios.h
 understands
