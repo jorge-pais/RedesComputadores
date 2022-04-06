@@ -47,6 +47,9 @@ int configureSerialterminal(linkLayer connectionParameters){
     return fd;
 }
 
+int closeSerialterminal(linkLayer connectionParameters){
+    return 0;
+}
 /*
 Try to read the header for a given frame, 
 Return values:

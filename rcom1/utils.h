@@ -11,6 +11,7 @@ file descriptor
 static struct termios oldtio, newtio;
 
 int configureSerialterminal(linkLayer connectionParameters);
+int closeSerialterminal(linkLayer connectionParameters);
 int getCommand(int fd, unsigned char *cmd, int cmdLen);
 int getInfoCommand(int fd, unsigned char *cmd, int cmdLen);
 
