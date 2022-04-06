@@ -1,6 +1,9 @@
 {
     "files.associations": {
         "stat.h": "c",
-        "fcntl.h": "c"
+        "fcntl.h": "c",
+        "termios.h": "c",
+        "types.h": "c",
+        "definitions.h": "c"
     }
 }

@@ -22,9 +22,6 @@
 
 volatile int STOP=FALSE;
 
-static int timerFlag, timeoutFlag, timeoutCount;
-
-
 int llopen(int porta, int flag);
 
 int main(int argc, char** argv)
@@ -86,10 +83,6 @@ int main(int argc, char** argv)
     
     int state=0;
     unsigned char rx_byte = 0;
-    timerFlag = 1; timeoutFlag = 0; timeoutCount = 0;
-
-    /* printf("Sleeping 10 sec before reading anything\n");
-    sleep(10); */
 
     //Se for necessario continuar a retransmitir até deixar de receber SET
     while(TRUE){
