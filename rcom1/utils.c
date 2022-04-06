@@ -47,6 +47,13 @@ int configureSerialterminal(linkLayer connectionParameters){
     return fd;
 }
 
+
+/*
+Close Serial Port Terminal connection upon llclose()
+Return values:
+     1 - connection closed successfully
+    -1 - error
+*/
 int closeSerialterminal(linkLayer connectionParameters){
     return 0;
 }
