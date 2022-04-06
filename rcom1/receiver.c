@@ -36,8 +36,6 @@ int receiver_llopen(linkLayer connectionParameters){
 
 int receiver_llclose(linkLayer connectionParameters){
 
-    rx_fd = configureSerialterminal(connectionParameters);
-
     // DISC frame header
     unsigned char cmdDisc[] = {FLAG, A_tx, C_DISC, A_tx ^ C_DISC, FLAG};
     // UA frame header expected to receive

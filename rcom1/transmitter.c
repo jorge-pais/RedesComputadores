@@ -67,8 +67,6 @@ int transmitter_llopen(linkLayer connectionParameters){
 
 int transmitter_llclose(linkLayer connectionParameters){
 
-    tx_fd = configureSerialterminal(connectionParameters);
-
     // DISC frame header
     unsigned char cmdDisc[] = {FLAG, A_tx, C_DISC, A_tx ^ C_DISC, FLAG};
     // UA frame header

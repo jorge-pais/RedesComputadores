@@ -54,9 +54,20 @@ Return values:
      1 - connection closed successfully
     -1 - error
 */
-int closeSerialterminal(linkLayer connectionParameters){
-    return 0;
+int closeSerialterminal(int fd){
+    
+    tcflush(fd, TCIOFLUSH); // flush whatever's in the buffer
+
+    if (tcsetattr(fd,TCSANOW,&oldtio) == -1) {
+        perror("tcsetattr");
+        exit(-1);
+    }
+
+    close(fd);
+    return 1;
 }
+
+
 /*
 Try to read the header for a given frame, 
 Return values:
@@ -128,7 +139,7 @@ State machine similar to getCommand() but exclusively used to read Information F
 
 Return values:
     1   - the command was read successfully
-    0   - couldn´t read anything
+    0   - couldn't read anything
     -1  - error while reading
 */
 int getInfoCommand(int fd, unsigned char *cmd, int cmdLen){
