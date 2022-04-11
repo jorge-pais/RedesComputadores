@@ -10,15 +10,16 @@ int receiver_llopen(linkLayer connectionParameters){
 
     rx_fd = configureSerialterminal(connectionParameters);
 
-    unsigned char cmdSet[] = {FLAG, A_tx, C_SET, A_tx ^ C_UA, FLAG};
+    u_int8_t cmdSet[] = {FLAG, A_tx, C_SET, A_tx ^ C_UA, FLAG};
 
-    if(getCommand(rx_fd, cmdSet, 3) < 0){
+    if(getCommand(rx_fd, cmdSet, 3) <= 0){
+        
         perror("Haven't received SET");
         return -1;
     }
     printf("Received SET, sending UA\n");
 
-    unsigned char cmdUA[] = {FLAG, A_tx, C_UA, A_tx ^ C_UA, FLAG};
+    u_int8_t cmdUA[] = {FLAG, A_tx, C_UA, A_tx ^ C_UA, FLAG};
 
     if(write(rx_fd, cmdUA, 5) < 0){
         perror("Error writing to serial port");
@@ -28,11 +29,52 @@ int receiver_llopen(linkLayer connectionParameters){
     return 0;
 }
 
+u_int8_t *byteDestuffing(u_int8_t *data, int dataSize, int *outputDataSize){
+    if(data == NULL || outputDataSize == NULL){
+        printf("invalid parameters in function call");
+        return NULL;
+    }
+    
+    u_int8_t *destuffedData = malloc(dataSize);
+    if(destuffedData == NULL)
+        return NULL;
+
+    int size = 0;
+    for (int i = 0; i < dataSize; i++)
+    {
+        if(data[i] != ESC)
+            destuffedData[size++] = data[i];
+        else
+            switch (data[++i])
+            {
+            case FLAG^0x20:
+                destuffedData[size++] = FLAG;
+                break;
+            case ESC^0x20:
+                destuffedData[size++] = ESC;
+                break;
+            default: //invalid escape character use
+                free(destuffedData);
+                return NULL;
+                break;
+            }
+    }
+    
+    if(size != dataSize){
+        destuffedData = realloc(destuffedData, size);
+        if(destuffedData == NULL)
+            return NULL;
+    }
+
+    *outputDataSize = size;
+    return destuffedData;
+}
+
 /* int receiver_llclose(linkLayer connectionParameters){
     // DISC frame header
-    unsigned char cmdDisc[] = {FLAG, A_tx, C_DISC, A_tx ^ C_DISC, FLAG};
+    u_int8_t cmdDisc[] = {FLAG, A_tx, C_DISC, A_tx ^ C_DISC, FLAG};
     // UA frame header expected to receive
-    unsigned char cmdUA[] = {FLAG, A_rx, C_UA, A_rx ^ C_UA, FLAG};
+    u_int8_t cmdUA[] = {FLAG, A_rx, C_UA, A_rx ^ C_UA, FLAG};
 
     int timeoutCount = 0;
 

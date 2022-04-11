@@ -3,24 +3,25 @@
 //static struct termios oldtio, newtio;
 static int tx_fd;
 u_int8_t timeoutFlag, timerFlag, timeoutCount;
+linkLayer tx_cParameters;
+
+//static int sequenceBit = 0;
 
 int transmitter_llopen(linkLayer connectionParameters){
-
+    //*tx_cParameters = connectionParameters;
     tx_fd = configureSerialterminal(connectionParameters);
 
-    //printf("%d \n", newtio.c_cc[VTIME]);
-
     // SET frame header
-    unsigned char cmdSet[] = {FLAG, A_tx, C_SET, A_tx ^ C_SET, FLAG};
+    u_int8_t cmdSet[] = {FLAG, A_tx, C_SET, A_tx ^ C_SET, FLAG};
     // UA frame header, what we are expecting to receive
-    unsigned char cmdUA[] = {FLAG, A_tx, C_UA, A_tx ^ C_UA, FLAG};
+    u_int8_t cmdUA[] = {FLAG, A_tx, C_UA, A_tx ^ C_UA, FLAG};
 
     (void) signal(SIGALRM, timeOut);
 
     int res = write(tx_fd, cmdSet, 5);
     if(res < 0){
         perror("Error writing to serial port");
-        return -1;
+        return NULL;
     }
     printf("%d bytes written\n", res);
 
@@ -35,8 +36,8 @@ int transmitter_llopen(linkLayer connectionParameters){
         int readResult = getCommand(tx_fd, cmdUA, 5);
 
         if(readResult < 0){
-            perror("Error reading command from serial port");
-            return -1;
+            printf("Error reading command from serial port");
+            return NULL;
         }
         else if(readResult > 0){ //Success
             signal(SIGALRM, SIG_IGN); //disable interrupt handler
@@ -48,29 +49,83 @@ int transmitter_llopen(linkLayer connectionParameters){
             int res = write(tx_fd, cmdSet, 5);
             if(res < 0){
                 perror("Error writing to serial port");
-                return -1;
+                return NULL;
             }
             printf("%d bytes written\n", res);
             timeoutCount++;
         }
     }    
 
-    return -1;
+    return NULL;
+}
+
+u_int8_t *prepareInfoFrame(char *buf, int bufSize, int *outputSize, u_int8_t sequenceBit){
+    if(buf == NULL || bufSize <= 0 || bufSize > MAX_PAYLOAD_SIZE)
+        return NULL;
+
+    // Prepare the frame data
+    u_int8_t *data = malloc(bufSize + 1);
+    if(data == NULL)
+        return NULL;
+    
+    for (int i = 0; i < bufSize; i++) // Copy the buffer
+        data[i] = buf[i];
+    // Add the BCC byte
+    data[bufSize] = (u_int8_t) generateBCC(buf, bufSize);
+
+    int stuffedSize = 0;
+    u_int8_t *stuffedData = byteStuffing(data, bufSize+1, &stuffedSize);
+    if(stuffedData == NULL)
+        return NULL;
+    
+    free(data);
+
+    u_int8_t *outgoingData = malloc(stuffedSize + 5);
+    if(outgoingData == NULL){
+        free(stuffedData);
+        return NULL;
+    }
+    outgoingData[0] = FLAG;
+    outgoingData[1] = A_tx;
+    outgoingData[2] = C(sequenceBit);
+    outgoingData[3] = A_tx ^ C(sequenceBit);
+
+    // Copy the stuffed data
+    for (int i = 0; i < stuffedSize; i++)
+        outgoingData[i+4] = stuffedData[i];
+    
+    free(stuffedData);
+
+    *outputSize = stuffedSize + 5;
+    return outgoingData;
+}
+
+int llwrite(char *buf, int bufSize){
+    
+
+    timeoutFlag = 0; timerFlag = 1; timeoutCount;
+    while (timeoutCount <= MAX_RETRANSMISSIONS_DEFAULT)
+    {
+        
+    }
+    
+
+    return 0;
 }
 
 /* int transmitter_llclose(linkLayer connectionParameters){
 
     // DISC frame header
-    unsigned char cmdDisc[] = {FLAG, A_tx, C_DISC, A_tx ^ C_DISC, FLAG};
+    u_int8_t cmdDisc[] = {FLAG, A_tx, C_DISC, A_tx ^ C_DISC, FLAG};
     // UA frame header
-    unsigned char cmdUA[] = {FLAG, A_rx, C_UA, A_rx ^ C_UA, FLAG};
+    u_int8_t cmdUA[] = {FLAG, A_rx, C_UA, A_rx ^ C_UA, FLAG};
 
     (void) signal(SIGALRM, timeOut);
 
     int res = write(tx_fd, cmdDisc, 5);
     if(res < 0){
         perror("Error writing to serial port");
-        return -1;
+        return NULL;
     }
     printf("Disconnect command sent\n");
 
@@ -88,7 +143,7 @@ int transmitter_llopen(linkLayer connectionParameters){
 
         if(readResult < 0){
             perror("Error reading command from serial port");
-            return -1;
+            return NULL;
         }
         else if(readResult > 0){ //Success
             signal(SIGALRM, SIG_IGN); //disable interrupt handler
@@ -100,7 +155,7 @@ int transmitter_llopen(linkLayer connectionParameters){
             int res = write(tx_fd, cmdDisc, 5);
             if(res < 0){
                 perror("Error writing to serial port");
-                return -1;
+                return NULL;
             }
             printf("Disconnect command sent again\n");
             timeoutCount++;
@@ -109,13 +164,13 @@ int transmitter_llopen(linkLayer connectionParameters){
     
     if(write(tx_fd, cmdUA, 5) < 0){
         perror("Error writing to serial port");
-        return -1;
+        return NULL;
     }
     printf("UA control sent\n");
     return 1;
 } */
 
-unsigned char *byteStuffing(unsigned char *data, int dataSize, int *outputDataSize){
+u_int8_t *byteStuffing(u_int8_t *data, int dataSize, int *outputDataSize){
     if(data == NULL || outputDataSize == NULL){
         printf("one or more parameters are invalid\n");
         return NULL;
@@ -123,7 +178,7 @@ unsigned char *byteStuffing(unsigned char *data, int dataSize, int *outputDataSi
 
     // Maximum possible stuffed data size is twice that of the input data array
     // We prevent having to reallocate memory during the stuffing
-    unsigned char *stuffedData = malloc(2*dataSize); 
+    u_int8_t *stuffedData = malloc(2*dataSize); 
     if(stuffedData == NULL)
         return NULL;
     
