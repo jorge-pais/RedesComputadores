@@ -2,7 +2,7 @@
 
 //static struct termios oldtio, newtio;
 static int tx_fd;
-u_int8_t timeoutFlag, timerFlag,timeoutCount;
+u_int8_t timeoutFlag, timerFlag, timeoutCount;
 
 int transmitter_llopen(linkLayer connectionParameters){
 
@@ -16,7 +16,7 @@ int transmitter_llopen(linkLayer connectionParameters){
     unsigned char cmdUA[] = {FLAG, A_tx, C_UA, A_tx ^ C_UA, FLAG};
 
     (void) signal(SIGALRM, timeOut);
-    
+
     int res = write(tx_fd, cmdSet, 5);
     if(res < 0){
         perror("Error writing to serial port");
@@ -58,7 +58,7 @@ int transmitter_llopen(linkLayer connectionParameters){
     return -1;
 }
 
-int transmitter_llclose(linkLayer connectionParameters){
+/* int transmitter_llclose(linkLayer connectionParameters){
 
     // DISC frame header
     unsigned char cmdDisc[] = {FLAG, A_tx, C_DISC, A_tx ^ C_DISC, FLAG};
@@ -113,13 +113,49 @@ int transmitter_llclose(linkLayer connectionParameters){
     }
     printf("UA control sent\n");
     return 1;
-}
+} */
 
-int *byteStuffing(unsigned char *data, int dataSize, int *outputDataSize){
+unsigned char *byteStuffing(unsigned char *data, int dataSize, int *outputDataSize){
     if(data == NULL || outputDataSize == NULL){
         printf("one or more parameters are invalid\n");
         return NULL;
-    }   
+    }
+
+    // Maximum possible stuffed data size is twice that of the input data array
+    // We prevent having to reallocate memory during the stuffing
+    unsigned char *stuffedData = malloc(2*dataSize); 
+    if(stuffedData == NULL)
+        return NULL;
+    
+    int size = 0;
+
+    for (int i = 0; i < dataSize; i++){
+        switch (data[i])
+        {
+        case FLAG:
+            stuffedData[size++] = ESC;
+            stuffedData[size++] = FLAG ^ 0x20; 
+            /* code */
+            break;
+        case ESC:
+            stuffedData[size++] = ESC;
+            stuffedData[size++] = ESC ^ 0x20;  
+            break;
+        default:
+            stuffedData[size++] = data[i];
+            break;
+        }
+    }
+
+    // Trim the array in memory if needed
+    if(size != 2*dataSize){
+        stuffedData = realloc(stuffedData, size);
+        if(stuffedData == NULL)
+            return NULL;
+    }
+
+    *outputDataSize = size;
+    return stuffedData;
 }
 
 void timeOut(){

@@ -7,6 +7,6 @@
 Open logical connection on the receiver end
 */
 int receiver_llopen(linkLayer connectionParameters);
-int receiver_llclose(linkLayer connectionParameters);
+//int receiver_llclose(linkLayer connectionParameters);
 
 #endif

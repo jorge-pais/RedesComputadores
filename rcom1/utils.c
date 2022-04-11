@@ -1,5 +1,9 @@
 #include "utils.h"
 
+/*  
+Globally declared termios structures, and serial terminal 
+file descriptor
+*/
 static struct termios oldtio, newtio;
 
 int configureSerialterminal(linkLayer connectionParameters){
@@ -18,9 +22,11 @@ int configureSerialterminal(linkLayer connectionParameters){
     }
     
     //Configure serial port connection
+    speed_t baud = convertBaudRate(connectionParameters.baudRate);
+
     bzero(&newtio, sizeof(newtio));
     //newtio.c_cflag = connectionParameters.baudRate | CS8 | CLOCAL | CREAD;
-    newtio.c_cflag = CS8 | CLOCAL | CREAD;
+    newtio.c_cflag = baud | CS8 | CLOCAL | CREAD;
     newtio.c_iflag = IGNPAR;
     newtio.c_oflag = 0; 
 
@@ -40,12 +46,6 @@ int configureSerialterminal(linkLayer connectionParameters){
     return fd;
 }
 
-/*
-Close Serial Port Terminal connection upon llclose()
-Return values:
-     1 - connection closed successfully
-    -1 - error
-*/
 int closeSerialterminal(int fd){
     
     tcflush(fd, TCIOFLUSH); // flush whatever's in the buffer
@@ -59,13 +59,6 @@ int closeSerialterminal(int fd){
     return 1;
 }
 
-/*
-Try to read the header for a given frame, 
-Return values:
-    1   - the command was read successfully
-    0   - couldn´t read anything
-    -1  - error while reading
-*/
 int getCommand(int fd, unsigned char *cmd, int cmdLen){
     int state = 0, res;
     unsigned char rx_byte;
@@ -125,14 +118,6 @@ int getCommand(int fd, unsigned char *cmd, int cmdLen){
     return 0;
 }
 
-/*
-State machine similar to getCommand() but exclusively used to read Information Frames
-
-Return values:
-    1   - the command was read successfully
-    0   - couldn't read anything
-    -1  - error while reading
-*/
 int getInfoCommand(int fd, unsigned char *cmd, int cmdLen){
     int state = 0, res;
     unsigned char rx_byte;
@@ -185,6 +170,179 @@ int getInfoCommand(int fd, unsigned char *cmd, int cmdLen){
     return 0;
 }
 
-int convertBaudRate(int baud){
+/*
+Later on addicional constant support for SPARC and non-SPARC 
+architectures should be implemented
+*/
+speed_t convertBaudRate(int baud){
+    switch (baud)
+    {
+    case 0:
+        #ifndef B0
+            return -1;
+        #endif
+            return B0;
+        break;
+    case 50:
+        #ifndef B50
+            return -1;
+        #endif
+            return B50;
+        break;
+    case 75:
+        #ifndef B75
+            return -1;
+        #endif
+            return B75;
+        break;
+    case 110:
+        #ifndef B110
+            return -1;
+        #endif
+            return B110;
+        break;
+    case 134:
+        #ifndef B134
+            return -1;
+        #endif
+            return B134;
+        break;
+    case 150:
+        #ifndef B150
+            return -1;
+        #endif
+            return B150;
+        break;
+    case 200:
+        #ifndef B200
+            return -1;
+        #endif
+            return B200;
+        break;
+    case 300:
+        #ifndef B300
+            return -1;
+        #endif
+            return B300;
+        break;
+    case 600:
+        #ifndef B600
+            return -1;
+        #endif
+            return B600;
+        break;
+    case 1200:
+        #ifndef B1200
+            return -1;
+        #endif
+            return B1200;
+        break;
+    case 1800:
+        #ifndef B1800
+            return -1;
+        #endif
+            return B1800;
+        break;
+    case 2400:
+        #ifndef B2400
+            return -1;
+        #endif
+            return B2400;
+        break;
+    case 4800:
+        #ifndef B4800
+            return -1;
+        #endif
+            return B4800;
+        break;
+    case 9600:
+        #ifndef B9600
+            return -1;
+        #endif
+            return B9600;
+        break;
+    case 19200:
+        #ifndef B19200
+            return -1;
+        #endif
+            return B19200;
+        break;
+    case 38400:
+        #ifndef B38400
+            return -1;
+        #endif
+            return B38400;
+        break;
+    case 57600:
+        #ifndef B57600
+            return -1;
+        #endif
+            return B57600;
+        break;
+    case 115200:
+        #ifndef B115200
+            return -1;
+        #endif
+            return B115200;
+        break;
+    case 230400:
+        #ifndef B230400
+            return -1;
+        #endif
+            return B230400;
+        break;
+    case 460800:
+        #ifndef B460800
+            return -1;
+        #endif
+            return B460800;
+        break;
+    case 500000:
+        #ifndef B500000
+            return -1;
+        #endif
+            return B500000;
+        break;
+    case 576000:
+        #ifndef B576000
+            return -1;
+        #endif
+            return B576000;
+        break;
+    case 921600:
+        #ifndef B921600
+            return -1;
+        #endif
+            return B921600;
+        break;
+    case 1000000:
+        #ifndef B1000000
+            return -1;
+        #endif
+            return B1000000;
+        break;
+    case 1152000:
+        #ifndef B1152000
+            return -1;
+        #endif
+            return B1152000;
+        break;
+    case 1500000:
+        #ifndef B1500000
+            return -1;
+        #endif
+            return B1500000;
+        break;
+    case 2000000:
+        #ifndef B2000000
+            return -1;
+        #endif
+            return B2000000;
+        break;
+    default:
+        return BAUDRATE_DEFAULT;
+        break;
+    }
+
     return BAUDRATE_DEFAULT;
 }

@@ -4,7 +4,7 @@
 Globally declared serial terminal file descriptor
 */
 static int rx_fd;
-u_int8_t timeoutFlag, timerFlag;
+//u_int8_t timeoutFlag, timerFlag;
 
 int receiver_llopen(linkLayer connectionParameters){
 
@@ -28,7 +28,7 @@ int receiver_llopen(linkLayer connectionParameters){
     return 0;
 }
 
-int receiver_llclose(linkLayer connectionParameters){
+/* int receiver_llclose(linkLayer connectionParameters){
     // DISC frame header
     unsigned char cmdDisc[] = {FLAG, A_tx, C_DISC, A_tx ^ C_DISC, FLAG};
     // UA frame header expected to receive
@@ -83,10 +83,4 @@ int receiver_llclose(linkLayer connectionParameters){
     }    
 
     return -1;
-}
-
-void timeOut(){
-    printf("Connection timeout\n");
-    timeoutFlag = 1;    //indicate there was a timeout
-    timerFlag = 1;      //restart the timer 
-}
+} */

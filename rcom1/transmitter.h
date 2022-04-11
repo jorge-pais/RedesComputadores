@@ -14,6 +14,6 @@ Return values:
     pointer to a new vector 
     NULL - somekind of error
 */
-int *byteStuffing(unsigned char *data, int dataSize, int *outputDataSize);
+unsigned char *byteStuffing(unsigned char *data, int dataSize, int *outputDataSize);
 
 #endif
