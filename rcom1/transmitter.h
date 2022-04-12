@@ -17,7 +17,7 @@ Return values:
 u_int8_t *byteStuffing(unsigned char *data, int dataSize, int *outputDataSize);
 
 /*
-Prepare the Information Frame 
+Prepare an Information Frame 
 */
 u_int8_t *prepareInfoFrame(char *buf, int bufSize, int *outputSize, u_int8_t sequenceBit);
 

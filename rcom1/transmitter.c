@@ -94,6 +94,8 @@ u_int8_t *prepareInfoFrame(char *buf, int bufSize, int *outputSize, u_int8_t seq
     for (int i = 0; i < stuffedSize; i++)
         outgoingData[i+4] = stuffedData[i];
     
+    outgoingData[stuffedSize + 4] = FLAG;
+
     free(stuffedData);
 
     *outputSize = stuffedSize + 5;
@@ -101,7 +103,8 @@ u_int8_t *prepareInfoFrame(char *buf, int bufSize, int *outputSize, u_int8_t seq
 }
 
 int llwrite(char *buf, int bufSize){
-    
+    int frameSize = 0;
+    u_int8_t frame = prepareInfoFrame(buf, bufSize, &frameSize, 0);
 
     timeoutFlag = 0; timerFlag = 1; timeoutCount;
     while (timeoutCount <= MAX_RETRANSMISSIONS_DEFAULT)
@@ -109,7 +112,6 @@ int llwrite(char *buf, int bufSize){
         
     }
     
-
     return 0;
 }
 
@@ -189,8 +191,7 @@ u_int8_t *byteStuffing(u_int8_t *data, int dataSize, int *outputDataSize){
         {
         case FLAG:
             stuffedData[size++] = ESC;
-            stuffedData[size++] = FLAG ^ 0x20; 
-            /* code */
+            stuffedData[size++] = FLAG ^ 0x20;
             break;
         case ESC:
             stuffedData[size++] = ESC;
@@ -208,7 +209,6 @@ u_int8_t *byteStuffing(u_int8_t *data, int dataSize, int *outputDataSize){
         if(stuffedData == NULL)
             return NULL;
     }
-
     *outputDataSize = size;
     return stuffedData;
 }

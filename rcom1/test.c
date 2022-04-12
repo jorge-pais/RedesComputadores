@@ -9,17 +9,17 @@ int main(int argc, char *argv[]){
 	}
 
     //test stuffing
-    /* u_int8_t data[6] = {0x00, 0x01, 0x7E, 0x44, 0x7D, 0x7E};
+    u_int8_t data[6] = {0x00, 0x01, 0x7E, 0x44, 0x7D, 0x74};
     int size = 0;
 
-    u_int8_t *newData = byteStuffing(data, 6, &size);
+    u_int8_t *newData = prepareInfoFrame(data, 6, &size, 1);
 
     for (int i = 0; i < size; i++)
         printf("0x%02x ", newData[i]);
     
-    printf("\n"); */
+    printf("\n");
 
-	printf("%s %s\n", argv[1], argv[2]);
+	/* printf("%s %s\n", argv[1], argv[2]);
 	fflush(stdout);
 
 	struct linkLayer ll;
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]){
         llopen(ll);
     }
     else
-        printf("bad parameters\n");
+        printf("bad parameters\n"); */
 
     return 0;
 }

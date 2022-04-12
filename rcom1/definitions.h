@@ -16,4 +16,11 @@
 //Information frame control
 #define C(S)        (S<<1)      //S = Ns
 
+#define DEBUG
+#ifdef DEBUG
+    #define DEBUG_PRINT(str) printf(str);
+#else
+    #define DEBUG_PRINT(str)
+#endif
+
 #endif
