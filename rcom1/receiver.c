@@ -31,8 +31,8 @@ int receiver_llopen(linkLayer connectionParameters){
 }
 
 int llread(char *packet){
-    if(packet == NULL)
-        return -1;
+    /* if(packet == NULL)
+        return -1; */
 
     u_int8_t dataFrameHeader[] = {FLAG, A_tx, C(!rx_lastSeqNumber), (A_tx ^ C(!rx_lastSeqNumber))}; //expected header
 
