@@ -33,8 +33,8 @@ int main(int argc, char *argv[]){
 		ll.role = TRANSMITTER;
         
         llopen(ll);
-        char text[] = "Olá netedu!";
-        llwrite(text, 13);
+        char text[] = "Ola netedu!";
+        llwrite(text, 12);
     }
     else if(strcmp(argv[2], "rx") == 0){ //rx mode
         printf("rx mode\n");

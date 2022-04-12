@@ -15,7 +15,7 @@ int receiver_llopen(linkLayer connectionParameters){
 
     if(checkHeader(rx_fd, cmdSET, 5) <= 0){
         
-        perror("Haven't received SET");
+        fprintf(stderr, "Haven't received SET");
         return -1;
     }
     printf("Received SET, sending UA\n");
@@ -23,7 +23,7 @@ int receiver_llopen(linkLayer connectionParameters){
     u_int8_t cmdUA[] = {FLAG, A_tx, C_UA, (A_tx ^ C_UA), FLAG};
 
     if(write(rx_fd, cmdUA, 5) < 0){
-        perror("Error writing to serial port");
+        fprintf(stderr, "Error writing to serial port");
         return -1;
     }
 
@@ -102,7 +102,7 @@ u_int8_t *byteDestuffing(u_int8_t *data, int dataSize, int *outputDataSize){
     int timeoutCount = 0;
 
     if(checkHeader(rx_fd, cmdDisc, 3) < 0){
-        perror("Haven't received DISC command");
+        fprintf(stderr, "Haven't received DISC command");
         return -1;
     }
     printf("Received DISC, sending DISC back\n");
@@ -111,7 +111,7 @@ u_int8_t *byteDestuffing(u_int8_t *data, int dataSize, int *outputDataSize){
     
     int res = write(rx_fd, cmdDisc, 5);
     if(res < 0){
-        perror("Error writing to serial port");
+        fprintf(stderr, "Error writing to serial port");
         return -1;
     }
     printf("DISC sent back\n", res);
@@ -127,7 +127,7 @@ u_int8_t *byteDestuffing(u_int8_t *data, int dataSize, int *outputDataSize){
         int readResult = checkHeader(rx_fd, cmdUA, 5);
 
         if(readResult < 0){
-            perror("Error reading command from serial port");
+            fprintf(stderr, "Error reading command from serial port");
             return -1;
         }
         else if(readResult > 0){ //Success
@@ -139,7 +139,7 @@ u_int8_t *byteDestuffing(u_int8_t *data, int dataSize, int *outputDataSize){
         if(timeoutFlag){
             int res = write(rx_fd, cmdDisc, 5);
             if(res < 0){
-                perror("Error writing to serial port");
+                fprintf(stderr, "Error writing to serial port");
                 return -1;
             }
             printf("DISC sent back again", res);

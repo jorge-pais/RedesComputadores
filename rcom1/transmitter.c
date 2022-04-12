@@ -21,7 +21,7 @@ int transmitter_llopen(linkLayer connectionParameters){
 
     int res = write(tx_fd, cmdSet, 5);
     if(res < 0){
-        perror("Error writing to serial port");
+        fprintf(stderr, "Error writing to serial port");
         return -1;
     }
     printf("%d bytes written\n", res);
@@ -49,7 +49,7 @@ int transmitter_llopen(linkLayer connectionParameters){
         if(timeoutFlag){
             int res = write(tx_fd, cmdSet, 5);
             if(res < 0){
-                perror("Error writing to serial port");
+                fprintf(stderr, "Error writing to serial port");
                 return -1;
             }
             printf("%d bytes written\n", res);
@@ -117,6 +117,7 @@ int llwrite(char *buf, int bufSize){
         free(frame);
         return -1;
     }
+    printf("%d bytes written\n", res);
 
     u_int8_t control, sequenceBit;
 
@@ -177,7 +178,7 @@ int llwrite(char *buf, int bufSize){
 
     int res = write(tx_fd, cmdDisc, 5);
     if(res < 0){
-        perror("Error writing to serial port");
+        fprintf(stderr, "Error writing to serial port");
         return NULL;
     }
     printf("Disconnect command sent\n");
@@ -195,7 +196,7 @@ int llwrite(char *buf, int bufSize){
         int readResult = checkHeader(tx_fd, cmdDisc, 5);
 
         if(readResult < 0){
-            perror("Error reading command from serial port");
+            fprintf(stderr, "Error reading command from serial port");
             return NULL;
         }
         else if(readResult > 0){ //Success
@@ -207,7 +208,7 @@ int llwrite(char *buf, int bufSize){
         if(timeoutFlag){
             int res = write(tx_fd, cmdDisc, 5);
             if(res < 0){
-                perror("Error writing to serial port");
+                fprintf(stderr, "Error writing to serial port");
                 return NULL;
             }
             printf("Disconnect command sent again\n");
@@ -216,7 +217,7 @@ int llwrite(char *buf, int bufSize){
     }    
     
     if(write(tx_fd, cmdUA, 5) < 0){
-        perror("Error writing to serial port");
+        fprintf(stderr, "Error writing to serial port");
         return NULL;
     }
     printf("UA control sent\n");

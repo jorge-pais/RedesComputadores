@@ -38,7 +38,7 @@ int configureSerialterminal(linkLayer connectionParameters){
     tcflush(fd, TCIOFLUSH); // flush whatever's in the buffer
 
     if ( tcsetattr(fd,TCSANOW,&newtio) == -1) {
-        perror("tcsetattr");
+        fprintf(stderr, "tcsetattr");
         exit(-1);
     }
 
@@ -50,7 +50,7 @@ int closeSerialterminal(int fd){
     tcflush(fd, TCIOFLUSH); // flush whatever's in the buffer
 
     if (tcsetattr(fd,TCSANOW,&oldtio) == -1) {
-        perror("tcsetattr");
+        fprintf(stderr, "tcsetattr");
         exit(-1);
     }
 
