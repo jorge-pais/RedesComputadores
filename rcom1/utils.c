@@ -58,14 +58,17 @@ int closeSerialterminal(int fd){
     return 1;
 }
 
-int getCommand(int fd, u_int8_t *cmd, int cmdLen){
+int checkHeader(int fd, u_int8_t *cmd, int cmdLen){
+    if(cmd == NULL || cmdLen < 4 || cmdLen > 5)
+        return -1;
+
     int state = 0, res;
     u_int8_t rx_byte;
 
-    while(state != 5){
+    while(state != cmdLen){
         res = read(fd, &rx_byte, 1);
         if(res > 0) //Something was read
-            printf("received byte: 0x%02x -- state: %d \n", rx_byte, state);
+            DEBUG_PRINT("received byte: 0x%02x -- state: %d \n", rx_byte, state);
         else //Nothing has been read or some kind of error
             break;
         switch(state){ //State machine
@@ -92,14 +95,14 @@ int getCommand(int fd, u_int8_t *cmd, int cmdLen){
                 state = 0;
             break;
             case 3:
-            if(rx_byte == (cmd[1]^cmd[2])) //BCC1
+            if(rx_byte == cmd[3]) //BCC1
                 state = 4;
             else if(rx_byte == cmd[0])
                 state = 1;
             else
                 state = 0;
             break;
-            case 4:
+            case 4: //In case there are 5 elements
             if(rx_byte == cmd[0]) //FLAG
                 state = 5;
             else
@@ -107,9 +110,8 @@ int getCommand(int fd, u_int8_t *cmd, int cmdLen){
             break;
         }
     }
-    printf("%d \n", res);
 
-    if(state == 5) //everything OK, we happy
+    if(state == cmdLen) //everything OK
         return 1;
     else if(res < 0) //somekind of error
         return -1;
@@ -118,74 +120,78 @@ int getCommand(int fd, u_int8_t *cmd, int cmdLen){
     return 0;
 }
 
-int getInfoCommand(int fd, u_int8_t *cmd, int cmdLen){
+u_int8_t readSupervisionHeader(int fd){
+    
+    u_int8_t controlField, rx_byte;
     int state = 0, res;
-    u_int8_t rx_byte;
 
-    while(state != 4){
+    while(state != 5){
         res = read(fd, &rx_byte, 1);
-        if(res > 0) //Something was read
-            printf("received byte: 0x%02x -- state: %d \n", rx_byte, state);
+        if(res > 0) //Something was read after 3 seconds
+            DEBUG_PRINT("received byte: 0x%02x -- state: %d \n", rx_byte, state);
         else //Nothing has been read or some kind of error
             break;
         switch(state){ //State machine
-            case 0:
-            if(rx_byte==cmd[0]) //Flag
+            case 0: //Flag
+            if(rx_byte==FLAG) 
                 state = 1;
             else
                 state = 0;
             break;
-            case 1:
-            if(rx_byte==cmd[1]) //Address field
+            case 1: //Address field
+            if(rx_byte==A_tx) 
                 state = 2;
-            else if(rx_byte==cmd[0])
+            else if(rx_byte==FLAG)
                 state = 1;
             else 
                 state = 0;
             break;
-            case 2:
-            if(rx_byte==cmd[2]) //Control field
+            case 2: //Control field
+            if(rx_byte==FLAG) 
+                state = 1;
+            else{
                 state = 3;
-            else if(rx_byte == cmd[0])
+                controlField = rx_byte;
+            }
+            break;
+            case 3:
+            if(rx_byte == (controlField^A_tx)) //BCC1
+                state = 4;
+            else if(rx_byte == FLAG)
                 state = 1;
             else
                 state = 0;
             break;
-            case 3:
-            if(rx_byte == (cmd[1]^cmd[2])) //BCC1
-                state = 4;
-            else if(rx_byte == cmd[0])
-                state = 1;
+            case 4:
+            if(rx_byte == FLAG)
+                state = 5;
             else
                 state = 0;
             break;
         }
     }
-    if(state == 4) //everything OK, we happy
-        return 1;
-    else if(res < 0) //somekind of error
-        return -1;
+    if(state == 5)
+        if((controlField & 0x01) || (controlField & 0x05)) //Check 
+            return controlField;
     
-    //didn't receive what was expected
-    return 0;
+    // In case nothing could be read, or was wrong
+    return 0xFF;
 }
 
-int generateBCC(u_int8_t *data, int dataSize){
-    if(data == NULL || dataSize <= 0)
-        return -1;
+u_int8_t generateBCC(u_int8_t *data, int dataSize){
+    
     if(dataSize == 1) //in case of only one element in the vector
-        return (int) data[0];
+        return data[0];
 
     u_int8_t BCC = (data[0] ^ data[1]);
 
     for (int i = 2; i < dataSize; i++)
         BCC ^= data[i];
 
-    return (int) BCC;
+    return BCC;
 }
 
-/*
-Later on addicional constant support for SPARC and non-SPARC 
+/* Later on addicional constant support for SPARC and non-SPARC 
 architectures should be implemented
 */
 speed_t convertBaudRate(int baud){

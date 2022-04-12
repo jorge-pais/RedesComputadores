@@ -16,6 +16,7 @@ Return values:
     file descriptor id - If successful
 */
 int configureSerialterminal(linkLayer connectionParameters);
+
 /*
 Close Serial Port Terminal connection upon llclose()
 Return values:
@@ -23,32 +24,36 @@ Return values:
     -1 - error
 */
 int closeSerialterminal(int fd);
+
 /*
-Try to read the header for a given frame, 
+Tries to read a specific header for a given frame, only works
+for valid header lenghts of either 4 or 5 bytes
+
 Return values:
     1   - the command was read successfully
     0   - couldn´t read anything
     -1  - error while reading
 */
-int getCommand(int fd, unsigned char *cmd, int cmdLen);
+int checkHeader(int fd, u_int8_t *cmd, int cmdLen);
+
 /*
-State machine similar to getCommand() but exclusively used to 
-read Information Frame headers
+Tries to read and then output the control field of a
+supervision frame header (RR or REJ)
 
 Return values:
-    1   - the command was read successfully
-    0   - couldn't read anything
-    -1  - error while reading
+    RR or REJ control field - the header was read successfully
+    0xFF - error while reading
 */
-int getInfoCommand(int fd, unsigned char *cmd, int cmdLen);
+u_int8_t readSupervisionHeader(int fd);
 
 /*
-Convert an integer baudrate to something that termios.h
-understands, also checks if a given baud rate is defined
+Convert an int to the apropriate speed_t that termios understands,
+also checks if a given baud rate is defined
 for the current system. This check is done during compiling, so
 one should already compile with the target architecture in mind
     eg. 9600 -> B9600 (= 00000015)
-If baud is an invalid value, the function will return BAUDRATE_DEFAULT
+If baud is an invalid value, the function will return 
+BAUDRATE_DEFAULT configured in linklayer.h
 */
 speed_t convertBaudRate(int baud);
 
@@ -72,6 +77,6 @@ Return Values
     BCC - BCC was correctly generated
     -1  - somekind of error
 */
-int generateBCC(u_int8_t *data, int dataSize);
+u_int8_t generateBCC(u_int8_t *data, int dataSize);
 
 #endif

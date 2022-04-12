@@ -4,26 +4,49 @@
 Globally declared serial terminal file descriptor
 */
 static int rx_fd;
+static int rx_lastSeqNumber = 1;
 //u_int8_t timeoutFlag, timerFlag;
 
 int receiver_llopen(linkLayer connectionParameters){
 
     rx_fd = configureSerialterminal(connectionParameters);
 
-    u_int8_t cmdSet[] = {FLAG, A_tx, C_SET, A_tx ^ C_UA, FLAG};
+    u_int8_t cmdSET[] = {FLAG, A_tx, C_SET, (A_tx ^ C_SET), FLAG};
 
-    if(getCommand(rx_fd, cmdSet, 3) <= 0){
+    if(checkHeader(rx_fd, cmdSET, 5) <= 0){
         
         perror("Haven't received SET");
         return -1;
     }
     printf("Received SET, sending UA\n");
 
-    u_int8_t cmdUA[] = {FLAG, A_tx, C_UA, A_tx ^ C_UA, FLAG};
+    u_int8_t cmdUA[] = {FLAG, A_tx, C_UA, (A_tx ^ C_UA), FLAG};
 
     if(write(rx_fd, cmdUA, 5) < 0){
         perror("Error writing to serial port");
         return -1;
+    }
+
+    return 0;
+}
+
+int llread(char *packet){
+    if(packet == NULL)
+        return -1;
+
+    u_int8_t dataFrameHeader[] = {FLAG, A_tx, C(!rx_lastSeqNumber), (A_tx ^ C(!rx_lastSeqNumber))}; //expected header
+
+    //possible response headers
+    u_int8_t cmdRR[] = {FLAG, A_tx, C_RR(rx_lastSeqNumber), (A_tx ^ C_RR(rx_lastSeqNumber)), FLAG};
+    u_int8_t cmdREJ[] = {FLAG, A_tx, C_REJ(rx_lastSeqNumber), (A_tx ^ C_REJ(rx_lastSeqNumber)), FLAG};
+    u_int8_t rx_byte;
+    int res;
+
+    u_int8_t STOP = 0;
+    while(TRUE){
+        res = read(rx_fd, &rx_byte, 1);
+        if(res)
+            DEBUG_PRINT("received byte: 0x%02x \n", rx_byte);
     }
 
     return 0;
@@ -78,7 +101,7 @@ u_int8_t *byteDestuffing(u_int8_t *data, int dataSize, int *outputDataSize){
 
     int timeoutCount = 0;
 
-    if(getCommand(rx_fd, cmdDisc, 3) < 0){
+    if(checkHeader(rx_fd, cmdDisc, 3) < 0){
         perror("Haven't received DISC command");
         return -1;
     }
@@ -101,7 +124,7 @@ u_int8_t *byteDestuffing(u_int8_t *data, int dataSize, int *outputDataSize){
             timerFlag = 0;
         }
 
-        int readResult = getCommand(rx_fd, cmdUA, 5);
+        int readResult = checkHeader(rx_fd, cmdUA, 5);
 
         if(readResult < 0){
             perror("Error reading command from serial port");

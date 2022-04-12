@@ -9,7 +9,7 @@ int main(int argc, char *argv[]){
 	}
 
     //test stuffing
-    u_int8_t data[6] = {0x00, 0x01, 0x7E, 0x44, 0x7D, 0x74};
+    /* u_int8_t data[6] = {0x00, 0x01, 0x7E, 0x44, 0x7D, 0x74};
     int size = 0;
 
     u_int8_t *newData = prepareInfoFrame(data, 6, &size, 1);
@@ -17,9 +17,9 @@ int main(int argc, char *argv[]){
     for (int i = 0; i < size; i++)
         printf("0x%02x ", newData[i]);
     
-    printf("\n");
+    printf("\n"); */
 
-	/* printf("%s %s\n", argv[1], argv[2]);
+	printf("%s %s\n", argv[1], argv[2]);
 	fflush(stdout);
 
 	struct linkLayer ll;
@@ -31,17 +31,22 @@ int main(int argc, char *argv[]){
     if(strcmp(argv[2], "tx") == 0){ //tx mode
         printf("tx mode\n");
 		ll.role = TRANSMITTER;
-
+        
         llopen(ll);
+        char text[] = "Olá netedu!";
+        llwrite(text, 13);
     }
     else if(strcmp(argv[2], "rx") == 0){ //rx mode
         printf("rx mode\n");
 		ll.role = RECEIVER;
-
+        
         llopen(ll);
+
+        char *text;
+        llread(text);
     }
     else
-        printf("bad parameters\n"); */
+        printf("bad parameters\n");
 
     return 0;
 }

@@ -5,6 +5,7 @@
         "termios.h": "c",
         "types.h": "c",
         "definitions.h": "c",
-        "receiver.h": "c"
+        "receiver.h": "c",
+        "utils.h": "c"
     }
 }
