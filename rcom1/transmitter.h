@@ -4,7 +4,7 @@
 #include "utils.h"
 
 int transmitter_llopen(linkLayer connectionParameters);
-int transmitter_llclose(linkLayer connectionParameters);
+int transmitter_llclose(int showStatistics);
 void timeOut();
 
 /*

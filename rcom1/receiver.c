@@ -14,15 +14,14 @@ int receiver_llopen(linkLayer connectionParameters){
     u_int8_t cmdSET[] = {FLAG, A_tx, C_SET, (A_tx ^ C_SET), FLAG};
 
     if(checkHeader(rx_fd, cmdSET, 5) <= 0){
-        
         fprintf(stderr, "Haven't received SET");
         return -1;
     }
     printf("Received SET, sending UA\n");
 
-    u_int8_t cmdUA[] = {FLAG, A_tx, C_UA, (A_tx ^ C_UA), FLAG};
+    u_int8_t repUA[] = {FLAG, A_tx, C_UA, (A_tx ^ C_UA), FLAG};
 
-    if(write(rx_fd, cmdUA, 5) < 0){
+    if(write(rx_fd, repUA, 5) < 0){
         fprintf(stderr, "Error writing to serial port");
         return -1;
     }
@@ -31,22 +30,51 @@ int receiver_llopen(linkLayer connectionParameters){
 }
 
 int llread(char *packet){
-    /* if(packet == NULL)
-        return -1; */
+    if(packet == NULL)
+        return -1;
 
     u_int8_t dataFrameHeader[] = {FLAG, A_tx, C(!rx_lastSeqNumber), (A_tx ^ C(!rx_lastSeqNumber))}; //expected header
 
-    //possible response headers
-    u_int8_t cmdRR[] = {FLAG, A_tx, C_RR(rx_lastSeqNumber), (A_tx ^ C_RR(rx_lastSeqNumber)), FLAG};
-    u_int8_t cmdREJ[] = {FLAG, A_tx, C_REJ(rx_lastSeqNumber), (A_tx ^ C_REJ(rx_lastSeqNumber)), FLAG};
-    u_int8_t rx_byte;
-    int res;
+    //possible response frames
+    u_int8_t repRR[] = {FLAG, A_tx, C_RR(rx_lastSeqNumber), (A_tx ^ C_RR(rx_lastSeqNumber)), FLAG};
+    u_int8_t repREJ[] = {FLAG, A_tx, C_REJ(rx_lastSeqNumber), (A_tx ^ C_REJ(rx_lastSeqNumber)), FLAG};
+    
+    u_int8_t rx_byte, STOP = 0;
+    int res, i, outputSize;
 
-    u_int8_t STOP = 0;
-    while(TRUE){
-        res = read(rx_fd, &rx_byte, 1);
+    u_int8_t *dataField = malloc(2*MAX_PAYLOAD_SIZE + 1), *destuffedData;
+
+    while(!STOP){
+        res = checkHeader(rx_fd, dataFrameHeader, 4);
+        if(res < 0) //In case of error, or 3 seconds have elapsed
+            return -1;
+
+        rx_byte = 0x00, i = 0;
+        while (rx_byte != FLAG){
+            res = read(rx_fd, &rx_byte, 1);
+            dataField[i++] = rx_byte;
+        }
+
+        destuffedData = byteDestuffing(dataField, i, &outputSize);
+        u_int8_t BCC2 = generateBCC(destuffedData, outputSize - 1);
+        if(destuffedData[outputSize] == BCC2){
+            res = write(rx_fd, repRR, 5);
+            if(res < 0)
+                return -1;
+
+            //Check if the same data frame is being retransmitted
+            res = checkHeader(rx_fd, dataFrameHeader, 5);
+        }
+        else{
+            res = write(rx_fd, repREJ, 5);
+            if(res < 0)
+                return -1;
+        }
+
+        // For testing purposes
+        /* res = read(rx_fd, &rx_byte, 1);
         if(res)
-            DEBUG_PRINT("received byte: 0x%02x \n", rx_byte);
+            DEBUG_PRINT("received byte: 0x%02x \n", rx_byte); */
     }
 
     return 0;
@@ -93,7 +121,7 @@ u_int8_t *byteDestuffing(u_int8_t *data, int dataSize, int *outputDataSize){
     return destuffedData;
 }
 
-/* int receiver_llclose(linkLayer connectionParameters){
+/* int receiver_llclose(int showStatistics){
     // DISC frame header
     u_int8_t cmdDisc[] = {FLAG, A_tx, C_DISC, A_tx ^ C_DISC, FLAG};
     // UA frame header expected to receive

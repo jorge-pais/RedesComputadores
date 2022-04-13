@@ -6,7 +6,7 @@ all:
 	$(CC) $(C_FLAGS) *.c -o testApp
 
 # compile to object files
-test:
+object:
 	$(CC) $(C_FLAGS) *.c -c 
 
 clean:

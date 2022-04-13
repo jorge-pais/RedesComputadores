@@ -96,6 +96,7 @@ u_int8_t *prepareInfoFrame(char *buf, int bufSize, int *outputSize, u_int8_t seq
     for (int i = 0; i < stuffedSize; i++)
         outgoingData[i+4] = stuffedData[i];
     
+    // Add a trailling FLAG
     outgoingData[stuffedSize + 4] = FLAG;
 
     free(stuffedData);
@@ -160,14 +161,12 @@ int llwrite(char *buf, int bufSize){
         }
     }
     (void) signal(SIGALRM, SIG_IGN); //disable signal handler
-
-
     
     // Number of data characters written
     return bufSize;
 }
 
-/* int transmitter_llclose(linkLayer connectionParameters){
+/* int transmitter_llclose(int showStatistics){
 
     // DISC frame header
     u_int8_t cmdDisc[] = {FLAG, A_tx, C_DISC, A_tx ^ C_DISC, FLAG};

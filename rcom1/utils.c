@@ -49,7 +49,7 @@ int closeSerialterminal(int fd){
     
     tcflush(fd, TCIOFLUSH); // flush whatever's in the buffer
 
-    if (tcsetattr(fd,TCSANOW,&oldtio) == -1) {
+    if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
         fprintf(stderr, "tcsetattr");
         exit(-1);
     }
@@ -116,7 +116,7 @@ int checkHeader(int fd, u_int8_t *cmd, int cmdLen){
     else if(res < 0) //somekind of error
         return -1;
     
-    //didn't receive what was expected
+    //read() timer ran out 
     return 0;
 }
 

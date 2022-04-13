@@ -3,12 +3,16 @@
 #include "receiver.h"
 #include "utils.h"
 
+int serialRole;
+
 int llopen(linkLayer connectionParameters){
     
     if(connectionParameters.role == TRANSMITTER){
+        serialRole = TRANSMITTER;
         return transmitter_llopen(connectionParameters);
     }
     else if(connectionParameters.role == RECEIVER){
+        serialRole = RECEIVER;
         return receiver_llopen(connectionParameters);
     }
 
@@ -18,12 +22,12 @@ int llopen(linkLayer connectionParameters){
 }
 
 int llclose(int showStatistics){
-    /* if(connectionParameters.role == TRANSMITTER){
-        return transmitter_llclose(connectionParameters);
+    if(serialRole == TRANSMITTER){
+        return transmitter_llclose(showStatistics);
     }
-    else if(connectionParameters.role == RECEIVER){
-        return receiver_llclose(connectionParameters);
-    } */
+    else if(serialRole == RECEIVER){
+        return receiver_llclose(showStatistics);
+    }
 
     //somekind of error
     return -1;

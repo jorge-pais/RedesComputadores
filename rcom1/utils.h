@@ -29,6 +29,9 @@ int closeSerialterminal(int fd);
 Tries to read a specific header for a given frame, only works
 for valid header lenghts of either 4 or 5 bytes
 
+This function is protected by a timer, after 3 seconds of
+if nothing is read it'll return 0
+
 Return values:
     1   - the command was read successfully
     0   - couldn´t read anything

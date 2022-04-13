@@ -3,11 +3,13 @@
 
 #include "utils.h"
 
+static int rx_fd;
+
 /* 
 Open logical connection on the receiver end
 */
 int receiver_llopen(linkLayer connectionParameters);
-//int receiver_llclose(linkLayer connectionParameters);
+int receiver_llclose(int showStatistics);
 
 /*
 Perform a byte destuffing operation on vector data
