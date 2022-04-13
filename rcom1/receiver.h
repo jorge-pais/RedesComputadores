@@ -3,7 +3,7 @@
 
 #include "utils.h"
 
-static int rx_fd;
+//static int rx_fd;
 
 /* 
 Open logical connection on the receiver end

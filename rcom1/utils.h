@@ -8,7 +8,7 @@
 Globally declared termios structures, and serial terminal 
 file descriptor
 */
-//static struct termios oldtio, newtio;
+// static struct termios oldtio, newtio;
 
 /*
 Configure serial port terminal I/O

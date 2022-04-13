@@ -1,14 +1,14 @@
 #include "transmitter.h"
 
-//static struct termios oldtio, newtio;
 static int tx_fd;
-static int tx_lastSeqNumber = 0;
+static int tx_lastSeqNumber = 0; // Ns = 0, 1
 u_int8_t timeoutFlag, timerFlag, timeoutCount;
-linkLayer tx_cParameters;
+linkLayer *tx_cParameters;
 
 //static int sequenceBit = 0;
 
 int transmitter_llopen(linkLayer connectionParameters){
+
     //*tx_cParameters = connectionParameters;
     tx_fd = configureSerialterminal(connectionParameters);
 
@@ -28,7 +28,7 @@ int transmitter_llopen(linkLayer connectionParameters){
 
     timeoutFlag = 0, timeoutCount = 0, timerFlag = 1;
 
-    while (timeoutCount < connectionParameters.timeOut){
+    while (timeoutCount < connectionParameters.numTries){
         if(timerFlag){
             alarm(3);
             timerFlag = 0;
@@ -125,7 +125,7 @@ int llwrite(char *buf, int bufSize){
     (void) signal(SIGALRM, timeOut); // Set up signal handler
 
     //Cycle through timeouts
-    while (timeoutCount <= MAX_RETRANSMISSIONS_DEFAULT){
+    while (timeoutCount < MAX_RETRANSMISSIONS_DEFAULT){
         if(timerFlag){
             alarm(3);
             timerFlag = 0;
@@ -136,7 +136,7 @@ int llwrite(char *buf, int bufSize){
         //Check if the header and the sequence number are valid
         if(control != 0xFF && sequenceBit == !tx_lastSeqNumber){            
             if(control == C_RR(sequenceBit)){ //Receive receipt
-                printf("transmission successful");
+                printf("transmission successful\n");
                 tx_lastSeqNumber = sequenceBit;
                 break;
             }

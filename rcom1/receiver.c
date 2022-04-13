@@ -4,11 +4,12 @@
 Globally declared serial terminal file descriptor
 */
 static int rx_fd;
-static int rx_lastSeqNumber = 1;
+static int rx_lastSeqNumber = 1; //Nr = 0, 1
 //u_int8_t timeoutFlag, timerFlag;
 
 int receiver_llopen(linkLayer connectionParameters){
 
+    // É preciso começar a verificar e a guardar os parametros de ligação, globalmente
     rx_fd = configureSerialterminal(connectionParameters);
 
     u_int8_t cmdSET[] = {FLAG, A_tx, C_SET, (A_tx ^ C_SET), FLAG};
@@ -40,9 +41,11 @@ int llread(char *packet){
     u_int8_t repREJ[] = {FLAG, A_tx, C_REJ(rx_lastSeqNumber), (A_tx ^ C_REJ(rx_lastSeqNumber)), FLAG};
     
     u_int8_t rx_byte, STOP = 0;
-    int res, i, outputSize;
+    int res, i, destuffedDataSize;
 
-    u_int8_t *dataField = malloc(2*MAX_PAYLOAD_SIZE + 1), *destuffedData;
+    u_int8_t *dataField = malloc(2*MAX_PAYLOAD_SIZE + 1); 
+    //Maybe use double buffering for destuffedData
+    u_int8_t *destuffedData;
 
     while(!STOP){
         res = checkHeader(rx_fd, dataFrameHeader, 4);
@@ -55,29 +58,46 @@ int llread(char *packet){
             dataField[i++] = rx_byte;
         }
 
-        destuffedData = byteDestuffing(dataField, i, &outputSize);
-        u_int8_t BCC2 = generateBCC(destuffedData, outputSize - 1);
-        if(destuffedData[outputSize] == BCC2){
-            res = write(rx_fd, repRR, 5);
-            if(res < 0)
-                return -1;
+        //We're only interested in the vector up until
+        destuffedData = byteDestuffing(dataField, i - 1, &destuffedDataSize);
+        u_int8_t BCC2 = generateBCC(destuffedData, destuffedDataSize - 1);
+        DEBUG_PRINT("%2x \n", BCC2);
 
-            //Check if the same data frame is being retransmitted
-            res = checkHeader(rx_fd, dataFrameHeader, 5);
+        if(destuffedData[destuffedDataSize - 1] == BCC2){
+            DEBUG_PRINT("BCC2 checks out \n");
+            free(dataField);
+            res = write(rx_fd, repRR, 5);
+            if(res < 0) //maybe change this to the write() size
+                return -1;
         }
         else{
             res = write(rx_fd, repREJ, 5);
             if(res < 0)
                 return -1;
         }
-
-        // For testing purposes
-        /* res = read(rx_fd, &rx_byte, 1);
-        if(res)
-            DEBUG_PRINT("received byte: 0x%02x \n", rx_byte); */
+        //Check if the same data frame is being retransmitted
+        res = checkHeader(rx_fd, dataFrameHeader, 5);
+        if(res < 0) //error
+            return -1;
+        else if(res == 0) // Nothing has been read
+            break;
+        
+        /* I frames without detected errors on the header but with errors detected
+        on the data field: data field is discarded, but control field can be used to
+        trigger an action
+        – If it is a new frame, a retransmission request can be issued with a
+        REJ request, triggering a faster retransmission than waiting for a timeout
+        – If it is a duplicate, the frame should be confirmed with RR */
     }
+    
+    rx_lastSeqNumber = !rx_lastSeqNumber;
+    
+    //Copy whatever's has been read
+    //We assume that char* packet has at least MAX_PAYLOAD_SIZE bytes allocated
+    for (int i = 0; i < destuffedDataSize - 1; i++)
+        packet[i] = destuffedData[i];
 
-    return 0;
+    return (destuffedDataSize - 1);
 }
 
 u_int8_t *byteDestuffing(u_int8_t *data, int dataSize, int *outputDataSize){

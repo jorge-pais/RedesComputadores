@@ -65,10 +65,10 @@ int checkHeader(int fd, u_int8_t *cmd, int cmdLen){
     int state = 0, res;
     u_int8_t rx_byte;
 
-    while(state != cmdLen){
+    while(state < cmdLen){
         res = read(fd, &rx_byte, 1);
         if(res > 0) //Something was read
-            DEBUG_PRINT("received byte: 0x%02x -- state: %d \n", rx_byte, state);
+            DEBUG_PRINT("[checkHeader()] received byte: 0x%02x -- state: %d \n", rx_byte, state);
         else //Nothing has been read or some kind of error
             break;
         switch(state){ //State machine
@@ -116,7 +116,7 @@ int checkHeader(int fd, u_int8_t *cmd, int cmdLen){
     else if(res < 0) //somekind of error
         return -1;
     
-    //read() timer ran out 
+    //read() had nothing to read
     return 0;
 }
 
@@ -191,173 +191,255 @@ u_int8_t generateBCC(u_int8_t *data, int dataSize){
     return BCC;
 }
 
-/* Later on addicional constant support for SPARC and non-SPARC 
-architectures should be implemented
-*/
 speed_t convertBaudRate(int baud){
     switch (baud)
     {
     case 0:
         #ifndef B0
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B0;
+        #endif
         break;
     case 50:
         #ifndef B50
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B50;
+        #endif
         break;
     case 75:
         #ifndef B75
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B75;
+        #endif
         break;
     case 110:
         #ifndef B110
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B110;
+        #endif
         break;
     case 134:
         #ifndef B134
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B134;
+        #endif
         break;
     case 150:
         #ifndef B150
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B150;
+        #endif
         break;
     case 200:
         #ifndef B200
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B200;
+        #endif
         break;
     case 300:
         #ifndef B300
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B300;
+        #endif
         break;
     case 600:
         #ifndef B600
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B600;
+        #endif
         break;
     case 1200:
         #ifndef B1200
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B1200;
+        #endif
         break;
     case 1800:
         #ifndef B1800
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B1800;
+        #endif
         break;
     case 2400:
         #ifndef B2400
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B2400;
+        #endif
         break;
     case 4800:
         #ifndef B4800
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B4800;
+        #endif
         break;
     case 9600:
         #ifndef B9600
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B9600;
+        #endif
         break;
     case 19200:
         #ifndef B19200
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B19200;
+        #endif
         break;
     case 38400:
         #ifndef B38400
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B38400;
+        #endif
         break;
     case 57600:
         #ifndef B57600
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B57600;
+        #endif
         break;
     case 115200:
         #ifndef B115200
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B115200;
+        #endif
         break;
     case 230400:
         #ifndef B230400
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B230400;
+        #endif
         break;
     case 460800:
         #ifndef B460800
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B460800;
+        #endif
         break;
     case 500000:
         #ifndef B500000
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B500000;
+        #endif
         break;
     case 576000:
         #ifndef B576000
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B576000;
+        #endif
         break;
     case 921600:
         #ifndef B921600
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B921600;
+        #endif
         break;
     case 1000000:
         #ifndef B1000000
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B1000000;
+        #endif
         break;
     case 1152000:
         #ifndef B1152000
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B1152000;
+        #endif
         break;
     case 1500000:
         #ifndef B1500000
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B1500000;
+        #endif
         break;
     case 2000000:
         #ifndef B2000000
             return BAUDRATE_DEFAULT;
-        #endif
+        #else
             return B2000000;
+        #endif
+        break;
+    // SPARC architecture
+    case 76800:
+        #ifndef B76800
+            return BAUDRATE_DEFAULT;
+        #else
+            return B76800;
+        #endif
+        break;
+    case 153600:
+        #ifndef B153600
+            return BAUDRATE_DEFAULT;
+        #else
+            return B153600;
+        #endif
+        break;
+    case 307200:
+        #ifndef B307200
+            return BAUDRATE_DEFAULT;
+        #else
+            return B307200;
+        #endif
+        break;
+    case 614400:
+        #ifndef B614400
+            return BAUDRATE_DEFAULT;
+        #else
+            return B614400;
+        #endif
+        break;
+    //non-SPARC architectures
+    case 2500000:
+        #ifndef B2500000
+            return BAUDRATE_DEFAULT;
+        #else
+            return B2500000;
+        #endif
+        break;
+    case 3000000:
+        #ifndef B3000000
+            return BAUDRATE_DEFAULT;
+        #else
+            return B3000000;
+        #endif
+        break;
+    case 3500000:
+        #ifndef B3500000
+            return BAUDRATE_DEFAULT;
+        #else
+            return B3500000;
+        #endif
+        break;
+    case 4000000:
+        #ifndef B4000000
+            return BAUDRATE_DEFAULT;
+        #else
+            return B4000000;
+        #endif
         break;
     default:
         return BAUDRATE_DEFAULT;

@@ -22,12 +22,12 @@ int llopen(linkLayer connectionParameters){
 }
 
 int llclose(int showStatistics){
-    if(serialRole == TRANSMITTER){
+    /* if(serialRole == TRANSMITTER){
         return transmitter_llclose(showStatistics);
     }
     else if(serialRole == RECEIVER){
         return receiver_llclose(showStatistics);
-    }
+    } */
 
     //somekind of error
     return -1;

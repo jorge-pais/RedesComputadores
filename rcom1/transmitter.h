@@ -14,7 +14,7 @@ Return values:
     pointer to a new vector 
     NULL - somekind of error
 */
-u_int8_t *byteStuffing(unsigned char *data, int dataSize, int *outputDataSize);
+u_int8_t *byteStuffing(u_int8_t *data, int dataSize, int *outputDataSize);
 
 /*
 Prepare an Information Frame 
