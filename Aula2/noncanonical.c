@@ -22,8 +22,6 @@
 
 volatile int STOP=FALSE;
 
-int llopen(int porta, int flag);
-
 int main(int argc, char** argv)
 {
     int fd,c, res;
@@ -85,7 +83,7 @@ int main(int argc, char** argv)
     unsigned char rx_byte = 0;
 
     //Se for necessario continuar a retransmitir até deixar de receber SET
-    while(TRUE){
+    /* while(TRUE){
         while(state != 5){
             res = read(fd, &rx_byte, 1);
             if(res)
@@ -140,9 +138,9 @@ int main(int argc, char** argv)
             printf("%d bytes written\n", res);
             state = 0;
         }
-    }
+    } */
 
-    /* while(state != 5){
+    while(state != 5){
         res = read(fd, &rx_byte, 1);
         if(res)
             printf("received byte: 0x%02x -- state: %d \n", rx_byte, state);
@@ -189,7 +187,7 @@ int main(int argc, char** argv)
     printf("Received SET, sending UA...\n");
     unsigned char buffer[5] = {FLAG, A, C, BCC, FLAG}; 
     res = write(fd,buffer,5);   
-    printf("%d bytes written\n", res);  */
+    printf("%d bytes written\n", res); 
 
     tcsetattr(fd,TCSANOW,&oldtio);
     close(fd);

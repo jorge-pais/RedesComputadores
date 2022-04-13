@@ -4,6 +4,7 @@
 #include "utils.h"
 
 int transmitter_llopen(linkLayer connectionParameters);
+int transmitter_llclose(linkLayer connectionParameters);
 void timeOut();
 
 /*
@@ -13,6 +14,11 @@ Return values:
     pointer to a new vector 
     NULL - somekind of error
 */
-int *byteStuffing(unsigned char *data, int dataSize, int *outputDataSize);
+u_int8_t *byteStuffing(unsigned char *data, int dataSize, int *outputDataSize);
+
+/*
+Prepare an Information Frame 
+*/
+u_int8_t *prepareInfoFrame(char *buf, int bufSize, int *outputSize, u_int8_t sequenceBit);
 
 #endif
