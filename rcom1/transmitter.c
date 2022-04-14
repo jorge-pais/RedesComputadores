@@ -42,7 +42,7 @@ int transmitter_llopen(linkLayer connectionParameters){
         }
         else if(readResult > 0){ //Success
             signal(SIGALRM, SIG_IGN); //disable interrupt handler
-            printf("Received UA, connection established\n");
+            //printf("Received UA, connection established\n");
             return 1;
         }
 
@@ -106,11 +106,12 @@ u_int8_t *prepareInfoFrame(u_int8_t *buf, int bufSize, int *outputSize, u_int8_t
 }
 
 int llwrite(char *buf, int bufSize){
+    if(buf == NULL || bufSize > MAX_PAYLOAD_SIZE)
+        return -1;
+
     int frameSize = 0;
-    u_int8_t *frame = prepareInfoFrame((u_int8_t*) buf, bufSize, &frameSize, 0);
-
-    timeoutFlag = 0; timerFlag = 1; timeoutCount = 0;
-
+    u_int8_t *frame = prepareInfoFrame((u_int8_t*) buf, bufSize, &frameSize, tx_lastSeqNumber);
+    
     // Write for the first time
     int res = write(tx_fd, frame, frameSize);
     if(res < 0){
@@ -120,35 +121,36 @@ int llwrite(char *buf, int bufSize){
     }
     printf("%d bytes written\n", res);
 
-    u_int8_t control, sequenceBit;
+    u_int8_t control;
 
     (void) signal(SIGALRM, timeOut); // Set up signal handler
 
     //Cycle through timeouts
+    timeoutFlag = 0; timerFlag = 1; timeoutCount = 0;
     while (timeoutCount < MAX_RETRANSMISSIONS_DEFAULT){
         if(timerFlag){
             alarm(3);
             timerFlag = 0;
         }
+        //read the incoming frame control field
         control = readSUControlField(tx_fd, 5);
-        sequenceBit = SU_SEQ(control); // Get the sequence number
 
         //Check if the header and the sequence number are valid
-        if(control != 0xFF && sequenceBit == !tx_lastSeqNumber){            
-            if(control == C_RR(sequenceBit)){ //Receive receipt
-                printf("transmission successful\n");
-                tx_lastSeqNumber = sequenceBit;
-                break;
-            }
-            else if(control == C_REJ(sequenceBit)){ //REJ
-                res = write(tx_fd, frame, frameSize);
-                if(res < 0)
-                    return -1;
-                printf("%d bytes written\n", res);
+        if(control == C_RR(!tx_lastSeqNumber)){ //Receive receipt
+            printf("transmission successful\n");
+            tx_lastSeqNumber = !tx_lastSeqNumber;
 
-                timeoutCount = 0;
-                alarm(3); // reset the previous alarm
-            }
+            (void) signal(SIGALRM, SIG_IGN); //disable signal handler
+            return bufSize;
+        }
+        else if(control == C_REJ(tx_lastSeqNumber)){ //REJ
+            res = write(tx_fd, frame, frameSize);
+            if(res < 0)
+                return -1;
+            printf("%d bytes written\n", res);
+
+            timeoutCount = 0;
+            alarm(3); // reset the previous alarm
         }
 
         if(timeoutFlag){
@@ -162,8 +164,7 @@ int llwrite(char *buf, int bufSize){
     }
     (void) signal(SIGALRM, SIG_IGN); //disable signal handler
     
-    // Number of data characters written
-    return bufSize;
+    return -1;
 }
 
 /* int transmitter_llclose(int showStatistics){

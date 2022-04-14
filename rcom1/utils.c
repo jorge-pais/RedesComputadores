@@ -171,7 +171,7 @@ u_int8_t readSUControlField(int fd, int cmdLen){
         }
     }
     if(state == cmdLen)
-        if((controlField & 0x01) == 0x01 || (controlField & 0x05) == 0x05 || controlField == 0x00) //Check 
+        if((controlField & 0x01) == 0x01 || (controlField & 0x05) == 0x05 || (controlField == 0x00 || controlField == 0x02)) //Check 
             return controlField;
     
     // In case nothing could be read, or was wrong
