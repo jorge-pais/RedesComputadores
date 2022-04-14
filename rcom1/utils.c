@@ -3,7 +3,7 @@
 /*  
 Globally declared termios structures
 */
-static struct termios oldtio, newtio;
+struct termios oldtio, newtio;
 
 int configureSerialterminal(linkLayer connectionParameters){
 
@@ -32,7 +32,7 @@ int configureSerialterminal(linkLayer connectionParameters){
     //Set local configuration
     newtio.c_lflag = 0;
 
-    newtio.c_cc[VTIME]    = 30; // Set the read() timeout for 3 seconds
+    newtio.c_cc[VTIME]    = (connectionParameters.timeOut * 10); // Set the read() timeout for 3 seconds
     newtio.c_cc[VMIN]     = 0;  // Set minimum of characters to be read
 
     tcflush(fd, TCIOFLUSH); // flush whatever's in the buffer
@@ -174,6 +174,8 @@ u_int8_t readSUControlField(int fd, int cmdLen){
         if((controlField & 0x01) == 0x01 || (controlField & 0x05) == 0x05 || (controlField == 0x00 || controlField == 0x02)) //Check 
             return controlField;
     
+    if(res == 0)
+        return 0xFE;
     // In case nothing could be read, or was wrong
     return 0xFF;
 }
@@ -189,6 +191,34 @@ u_int8_t generateBCC(u_int8_t *data, int dataSize){
         BCC ^= data[i];
 
     return BCC;
+}
+
+linkLayer *checkParameters(linkLayer link){
+    
+    linkLayer *aux = malloc(sizeof(linkLayer));
+    if(aux == NULL)
+        return NULL;
+
+    aux->baudRate = link.baudRate;
+
+    if(link.role != TRANSMITTER && link.role != RECEIVER)
+        aux->role = NOT_DEFINED;
+    else
+        aux->role = link.role;
+
+    if(link.numTries < 1)
+        aux->numTries = MAX_RETRANSMISSIONS_DEFAULT;
+    else
+        aux->numTries = link.numTries;
+
+    if(link.timeOut < 0)
+        aux->timeOut = TIMEOUT_DEFAULT;
+    else
+        aux->timeOut = link.timeOut;
+    
+    strcpy(aux->serialPort, link.serialPort);
+
+    return aux;
 }
 
 speed_t convertBaudRate(int baud){

@@ -2,16 +2,22 @@
 
 /* 
 Globally declared serial terminal file descriptor
+and linklayer parameters
 */
 static int rx_fd;
-static int rx_lastSeqNumber = 0; //Nr = 0, 1
+linkLayer *rx_connectionParameters;
+
+static u_int8_t rx_lastSeqNumber = 0; //Nr = 0, 1
 //u_int8_t timeoutFlag, timerFlag;
 
 int receiver_llopen(linkLayer connectionParameters){
 
-    // É preciso começar a verificar e a guardar os parametros de ligação, globalmente
-    rx_fd = configureSerialterminal(connectionParameters);
+    // Save connection parameters
+    rx_connectionParameters = checkParameters(connectionParameters); 
 
+    rx_fd = configureSerialterminal(*rx_connectionParameters);
+
+    // We're expecting a SET command from tx
     u_int8_t cmdSET[] = {FLAG, A_tx, C_SET, (A_tx ^ C_SET), FLAG};
 
     if(checkHeader(rx_fd, cmdSET, 5) <= 0){
@@ -20,6 +26,7 @@ int receiver_llopen(linkLayer connectionParameters){
     }
     printf("Received SET, sending UA\n");
 
+    // Now we've got to send a UA reply to tx
     u_int8_t repUA[] = {FLAG, A_tx, C_UA, (A_tx ^ C_UA), FLAG};
 
     if(write(rx_fd, repUA, 5) < 0){
@@ -44,7 +51,12 @@ int llread(char *packet){
     int res, i, destuffedDataSize;
 
     u_int8_t *dataField = malloc(2*MAX_PAYLOAD_SIZE + 3); 
-    //Maybe use double buffering for destuffedData
+    /*
+    Maybe use double buffering (front and back buffers) for destuffedData
+    using globally declared pointers
+    We could use this to store the next packet, instead of
+    only reading the next frame header and discarding the data field
+    */
     u_int8_t *destuffedData;
 
     while(!STOP){
@@ -75,7 +87,7 @@ int llread(char *packet){
                     return -1;
             }
             else{
-                DEBUG_PRINT("wrong BCC2, sending RR\n");
+                DEBUG_PRINT("wrong BCC2, sending REJ\n");
                 res = write(rx_fd, repREJ, 5);
                 if(res < 0)
                     return -1;
@@ -95,7 +107,7 @@ int llread(char *packet){
 
         if(res == 0xFF) //error reading control field
             return -1;
-        else if(res == C(!rx_lastSeqNumber)) // This is a new frame
+        else if(res == C(!rx_lastSeqNumber) || res == 0xFE) // This is a new frame or nothing could be read
             STOP = 1;
     }
     //Update seq number
@@ -103,10 +115,11 @@ int llread(char *packet){
     
     //Copy whatever's has been read
     //We assume that char* packet has at least MAX_PAYLOAD_SIZE bytes allocated
-    printf("writting data to packet\n");
+    DEBUG_PRINT("writting data to packet\n");
     for (int i = 0; i < destuffedDataSize - 1; i++)
         packet[i] = destuffedData[i];
-
+    free(destuffedData);
+    
     return (destuffedDataSize - 1);
 }
 

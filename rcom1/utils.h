@@ -45,6 +45,7 @@ supervision frame header (RR or REJ)
 
 Return values:
     RR or REJ control field - the header was read successfully
+    0xFE - nothing was read
     0xFF - error while reading
 */
 u_int8_t readSUControlField(int fd, int cmdLen);
@@ -81,5 +82,15 @@ Return Values
     -1  - somekind of error
 */
 u_int8_t generateBCC(u_int8_t *data, int dataSize);
+
+/* 
+Check and copy linklayer parameters
+Invalid values are given default values assigned in linklayer.h
+
+Return Values
+    pointer to new struct
+    NULL - error
+*/
+linkLayer *checkParameters(linkLayer link);
 
 #endif

@@ -1,16 +1,22 @@
 #include "transmitter.h"
 
+/* 
+Globally declared serial terminal file descriptor
+and linklayer parameters
+*/
 static int tx_fd;
-static int tx_lastSeqNumber = 0; // Ns = 0, 1
+linkLayer *tx_connectionParameters;
+
+static u_int8_t tx_lastSeqNumber = 0; // Ns = 0, 1
 u_int8_t timeoutFlag, timerFlag, timeoutCount;
-linkLayer *tx_cParameters;
 
 //static int sequenceBit = 0;
 
 int transmitter_llopen(linkLayer connectionParameters){
 
-    //*tx_cParameters = connectionParameters;
-    tx_fd = configureSerialterminal(connectionParameters);
+    tx_connectionParameters = checkParameters(connectionParameters);
+    
+    tx_fd = configureSerialterminal(*tx_connectionParameters);
 
     // SET frame header
     u_int8_t cmdSet[] = {FLAG, A_tx, C_SET, (A_tx ^ C_SET), FLAG};
@@ -28,9 +34,9 @@ int transmitter_llopen(linkLayer connectionParameters){
 
     timeoutFlag = 0, timeoutCount = 0, timerFlag = 1;
 
-    while (timeoutCount < connectionParameters.numTries){
+    while (timeoutCount < tx_connectionParameters->numTries){
         if(timerFlag){
-            alarm(3);
+            alarm(tx_connectionParameters->timeOut);
             timerFlag = 0;
         }
 
@@ -127,9 +133,9 @@ int llwrite(char *buf, int bufSize){
 
     //Cycle through timeouts
     timeoutFlag = 0; timerFlag = 1; timeoutCount = 0;
-    while (timeoutCount < MAX_RETRANSMISSIONS_DEFAULT){
+    while (timeoutCount < tx_connectionParameters->numTries){
         if(timerFlag){
-            alarm(3);
+            alarm(tx_connectionParameters->timeOut);
             timerFlag = 0;
         }
         //read the incoming frame control field
@@ -150,7 +156,7 @@ int llwrite(char *buf, int bufSize){
             printf("%d bytes written\n", res);
 
             timeoutCount = 0;
-            alarm(3); // reset the previous alarm
+            alarm(tx_connectionParameters->timeOut); // reset the previous alarm
         }
 
         if(timeoutFlag){

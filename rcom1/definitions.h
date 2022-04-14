@@ -17,7 +17,7 @@
 //Information frame control
 #define C(S)        (S<<1)      //S = Ns
 
-#define DEBUG_
+#define DEBUG
 #ifdef DEBUG
     #define DEBUG_PRINT(str, ...) printf(str, ##__VA_ARGS__)
 #else

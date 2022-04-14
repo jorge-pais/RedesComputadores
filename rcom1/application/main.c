@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
 		ll.role = 0;
 		ll.baudRate = 9600;
 		ll.numTries = 3;
-		ll.timeOut = 3;
+		ll.timeOut = 1;
 
 		if(llopen(ll)==-1) {
 			fprintf(stderr, "Could not initialize link layer connection\n");
@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
 		ll.role = 1;
 		ll.baudRate = 9600;
 		ll.numTries = 3;
-		ll.timeOut = 3;
+		ll.timeOut = 1;
 
 		if(llopen(ll)==-1) {
 			fprintf(stderr, "Could not initialize link layer connection\n");
