@@ -47,7 +47,7 @@ Return values:
     RR or REJ control field - the header was read successfully
     0xFF - error while reading
 */
-u_int8_t readSupervisionHeader(int fd);
+u_int8_t readSUControlField(int fd, int cmdLen);
 
 /*
 Convert an int to the apropriate speed_t that termios understands,

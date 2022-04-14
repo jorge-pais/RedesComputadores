@@ -6,6 +6,7 @@
         "types.h": "c",
         "definitions.h": "c",
         "receiver.h": "c",
-        "utils.h": "c"
+        "utils.h": "c",
+        "sstream": "c"
     }
 }

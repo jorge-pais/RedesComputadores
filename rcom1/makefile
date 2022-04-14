@@ -7,8 +7,10 @@ all:
 
 # compile to object files
 object:
-	$(CC) $(C_FLAGS) *.c -c 
+	$(CC) $(C_FLAGS) linklayer.c receiver.c utils.c transmitter.c -c
+	cp *.o protocol/ 
+	rm -f *.o
 
 clean:
-	rm -f testApp a.out
-	rm -f *.o
+	rm -f testApp a.out application/main
+	rm -f *.o protocol/*.o

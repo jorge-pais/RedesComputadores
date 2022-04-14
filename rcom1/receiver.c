@@ -40,10 +40,10 @@ int llread(char *packet){
     u_int8_t repRR[] = {FLAG, A_tx, C_RR(rx_lastSeqNumber), (A_tx ^ C_RR(rx_lastSeqNumber)), FLAG};
     u_int8_t repREJ[] = {FLAG, A_tx, C_REJ(rx_lastSeqNumber), (A_tx ^ C_REJ(rx_lastSeqNumber)), FLAG};
     
-    u_int8_t rx_byte, STOP = 0;
+    u_int8_t rx_byte, STOP = 0, duplicateFlag = 0;
     int res, i, destuffedDataSize;
 
-    u_int8_t *dataField = malloc(2*MAX_PAYLOAD_SIZE + 1); 
+    u_int8_t *dataField = malloc(2*MAX_PAYLOAD_SIZE + 3); 
     //Maybe use double buffering for destuffedData
     u_int8_t *destuffedData;
 
@@ -52,48 +52,55 @@ int llread(char *packet){
         if(res < 0) //In case of error, or 3 seconds have elapsed
             return -1;
 
-        rx_byte = 0x00, i = 0;
-        while (rx_byte != FLAG){
-            res = read(rx_fd, &rx_byte, 1);
-            dataField[i++] = rx_byte;
+        if(!duplicateFlag){ //If we haven't yet received an error free frame
+            rx_byte = 0x00, i = 0;
+            while (rx_byte != FLAG){
+                res = read(rx_fd, &rx_byte, 1);
+                dataField[i++] = rx_byte;
+            }
+
+            //We're only interested in the vector up until
+            destuffedData = byteDestuffing(dataField, i - 1, &destuffedDataSize);
+            u_int8_t BCC2 = generateBCC(destuffedData, destuffedDataSize - 1);
+            DEBUG_PRINT("%2x \n", BCC2);
+
+            if(destuffedData[destuffedDataSize - 1] == BCC2){
+                DEBUG_PRINT("BCC2 checks out \n");
+                free(dataField);
+                duplicateFlag = 1;
+                res = write(rx_fd, repRR, 5);
+                if(res < 0) //maybe change this to the write() size
+                    return -1;
+            }
+            else{
+                res = write(rx_fd, repREJ, 5);
+                if(res < 0)
+                    return -1;
+            }
         }
-
-        //We're only interested in the vector up until
-        destuffedData = byteDestuffing(dataField, i - 1, &destuffedDataSize);
-        u_int8_t BCC2 = generateBCC(destuffedData, destuffedDataSize - 1);
-        DEBUG_PRINT("%2x \n", BCC2);
-
-        if(destuffedData[destuffedDataSize - 1] == BCC2){
-            DEBUG_PRINT("BCC2 checks out \n");
-            free(dataField);
+        else{ // We've already received an error free duplicate of this frame
+            DEBUG_PRINT("Already received this data frame, sending RR\n");
             res = write(rx_fd, repRR, 5);
-            if(res < 0) //maybe change this to the write() size
-                return -1;
+                if(res < 0) //maybe change this to the write() size
+                    return -1;
         }
-        else{
-            res = write(rx_fd, repREJ, 5);
-            if(res < 0)
-                return -1;
-        }
+
         //Check if the same data frame is being retransmitted
-        res = checkHeader(rx_fd, dataFrameHeader, 5);
-        if(res < 0) //error
+        DEBUG_PRINT("Checking if we've already received this frame\n");
+        rx_byte = readSUControlField(rx_fd, 4);
+        printf("0x%2x", rx_byte);
+        if(res == 0xFF) //error reading
             return -1;
-        else if(res == 0) // Nothing has been read
+        else if(res == C(rx_lastSeqNumber)) // This is a new frame
             break;
         
-        /* I frames without detected errors on the header but with errors detected
-        on the data field: data field is discarded, but control field can be used to
-        trigger an action
-        – If it is a new frame, a retransmission request can be issued with a
-        REJ request, triggering a faster retransmission than waiting for a timeout
-        – If it is a duplicate, the frame should be confirmed with RR */
     }
     
     rx_lastSeqNumber = !rx_lastSeqNumber;
     
     //Copy whatever's has been read
     //We assume that char* packet has at least MAX_PAYLOAD_SIZE bytes allocated
+    printf("writting data to packet\n");
     for (int i = 0; i < destuffedDataSize - 1; i++)
         packet[i] = destuffedData[i];
 

@@ -120,15 +120,15 @@ int checkHeader(int fd, u_int8_t *cmd, int cmdLen){
     return 0;
 }
 
-u_int8_t readSupervisionHeader(int fd){
+u_int8_t readSUControlField(int fd, int cmdLen){
     
     u_int8_t controlField, rx_byte;
     int state = 0, res;
 
-    while(state != 5){
+    while(state != cmdLen){
         res = read(fd, &rx_byte, 1);
         if(res > 0) //Something was read after 3 seconds
-            DEBUG_PRINT("received byte: 0x%02x -- state: %d \n", rx_byte, state);
+            DEBUG_PRINT("[readSUControlField()]received byte: 0x%02x -- state: %d \n", rx_byte, state);
         else //Nothing has been read or some kind of error
             break;
         switch(state){ //State machine
@@ -170,8 +170,8 @@ u_int8_t readSupervisionHeader(int fd){
             break;
         }
     }
-    if(state == 5)
-        if((controlField & 0x01) || (controlField & 0x05)) //Check 
+    if(state == cmdLen)
+        if((controlField & 0x01) == 0x01 || (controlField & 0x05) == 0x05 || controlField == 0x00) //Check 
             return controlField;
     
     // In case nothing could be read, or was wrong

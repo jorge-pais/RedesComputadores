@@ -61,7 +61,7 @@ int transmitter_llopen(linkLayer connectionParameters){
     return -1;
 }
 
-u_int8_t *prepareInfoFrame(char *buf, int bufSize, int *outputSize, u_int8_t sequenceBit){
+u_int8_t *prepareInfoFrame(u_int8_t *buf, int bufSize, int *outputSize, u_int8_t sequenceBit){
     if(buf == NULL || bufSize <= 0 || bufSize > MAX_PAYLOAD_SIZE)
         return NULL;
 
@@ -107,7 +107,7 @@ u_int8_t *prepareInfoFrame(char *buf, int bufSize, int *outputSize, u_int8_t seq
 
 int llwrite(char *buf, int bufSize){
     int frameSize = 0;
-    u_int8_t *frame = prepareInfoFrame(buf, bufSize, &frameSize, 0);
+    u_int8_t *frame = prepareInfoFrame((u_int8_t*) buf, bufSize, &frameSize, 0);
 
     timeoutFlag = 0; timerFlag = 1; timeoutCount = 0;
 
@@ -130,7 +130,7 @@ int llwrite(char *buf, int bufSize){
             alarm(3);
             timerFlag = 0;
         }
-        control = readSupervisionHeader(tx_fd);
+        control = readSUControlField(tx_fd, 5);
         sequenceBit = SU_SEQ(control); // Get the sequence number
 
         //Check if the header and the sequence number are valid
