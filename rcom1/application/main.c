@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
 						break;
 					}
 					total_bytes = total_bytes + write_result;
-					printf("read from file -> write to link layer, %d %d %d\n", bytes_read, write_result, total_bytes);
+					printf("read from link layer -> write to file, %d %d %d\n", bytes_read, write_result, total_bytes);
 				}
 				else if (buffer[0] == 0) {
 					printf("App layer: done receiving file\n");

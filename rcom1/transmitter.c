@@ -219,7 +219,7 @@ int transmitter_llclose(int showStatistics){
             timeoutCount++;
         }
     }    
-    
+
     if(write(tx_fd, cmdUA, 5) < 0){
         fprintf(stderr, "Error writing to serial port");
         return -1;

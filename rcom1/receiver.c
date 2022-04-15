@@ -6,6 +6,7 @@ and linklayer parameters
 */
 static int rx_fd;
 linkLayer *rx_connectionParameters;
+u_int8_t haltRead = 0;
 
 static u_int8_t rx_lastSeqNumber = 0; //Nr = 0, 1
 
@@ -40,6 +41,9 @@ int llread(char *packet){
     if(packet == NULL)
         return -1;
 
+    if(haltRead) // In case we received a DISC during last llread()
+        return 0;
+
     u_int8_t dataFrameHeader[] = {FLAG, A_tx, C(rx_lastSeqNumber), (A_tx ^ C(rx_lastSeqNumber))}; //expected header
 
     //possible response frames
@@ -67,7 +71,7 @@ int llread(char *packet){
             rx_byte = 0x00, i = 0;
             while (rx_byte != FLAG){
                 res = read(rx_fd, &rx_byte, 1);
-                DEBUG_PRINT("[llwrrite() read] 0x%02x\n", rx_byte);
+                DEBUG_PRINT("[llread() read] 0x%02x\n", rx_byte);
                 dataField[i++] = rx_byte;
             }
 
@@ -108,6 +112,10 @@ int llread(char *packet){
             return -1;
         else if(res == C(!rx_lastSeqNumber) || res == 0xFE) // This is a new frame or nothing could be read
             STOP = 1;
+        else if(res == C_DISC){ //Received DISC
+            STOP = 1;
+            haltRead = 1;
+        }
     }
     //Update seq number
     rx_lastSeqNumber = !rx_lastSeqNumber;
