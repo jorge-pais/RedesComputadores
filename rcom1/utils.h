@@ -11,7 +11,7 @@ file descriptor
 // static struct termios oldtio, newtio;
 
 /*
-Configure serial port terminal I/O
+Configure serial port terminal I/O using linkLayer
 Return values:
     file descriptor id - If successful
 */

@@ -3,8 +3,28 @@
 
 #include "utils.h"
 
+/* 
+Transmitter end of llopen() which is then passed on to the
+actual function
+
+Return values
+    1 - on successful connection establishment
+    -1 - on error
+*/
 int transmitter_llopen(linkLayer connectionParameters);
+
+/*
+Transmitter end of llclose()
+
+Return values
+    1 - on success
+    -1 - on error
+*/
 int transmitter_llclose(int showStatistics);
+
+/*
+Auxiliary timeout function for handling SIGALRM signals
+*/
 void timeOut();
 
 /*

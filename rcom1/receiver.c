@@ -8,7 +8,6 @@ static int rx_fd;
 linkLayer *rx_connectionParameters;
 
 static u_int8_t rx_lastSeqNumber = 0; //Nr = 0, 1
-//u_int8_t timeoutFlag, timerFlag;
 
 int receiver_llopen(linkLayer connectionParameters){
 
@@ -164,59 +163,31 @@ u_int8_t *byteDestuffing(u_int8_t *data, int dataSize, int *outputDataSize){
     return destuffedData;
 }
 
-/* int receiver_llclose(int showStatistics){
+int receiver_llclose(int showStatistics){
     // DISC frame header
     u_int8_t cmdDisc[] = {FLAG, A_tx, C_DISC, A_tx ^ C_DISC, FLAG};
     // UA frame header expected to receive
     u_int8_t cmdUA[] = {FLAG, A_rx, C_UA, A_rx ^ C_UA, FLAG};
 
-    int timeoutCount = 0;
-
-    if(checkHeader(rx_fd, cmdDisc, 3) < 0){
-        fprintf(stderr, "Haven't received DISC command");
+    if(checkHeader(rx_fd, cmdDisc, 5) < 0){
+        fprintf(stderr, "Error reading from serial port");
         return -1;
     }
-    printf("Received DISC, sending DISC back\n");
-
-    (void) signal(SIGALRM, timeOut);
+    DEBUG_PRINT("Received DISC, sending DISC back\n");
     
     int res = write(rx_fd, cmdDisc, 5);
     if(res < 0){
         fprintf(stderr, "Error writing to serial port");
         return -1;
     }
-    printf("DISC sent back\n", res);
+    DEBUG_PRINT("DISC sent back\n");
 
-    timeoutFlag = 0, timeoutCount = 0, timerFlag = 1;
+    if(checkHeader(rx_fd, cmdUA, 5) < 0){
+        fprintf(stderr, "Error reading from serial port");
+        return -1;
+    }
 
-    while (timeoutCount < connectionParameters.timeOut){
-        if(timerFlag){
-            alarm(3);
-            timerFlag = 0;
-        }
+    closeSerialterminal(rx_fd);
 
-        int readResult = checkHeader(rx_fd, cmdUA, 5);
-
-        if(readResult < 0){
-            fprintf(stderr, "Error reading command from serial port");
-            return -1;
-        }
-        else if(readResult > 0){ //Success
-            signal(SIGALRM, SIG_IGN); //disable interrupt handler
-            printf("Received UA, connection established\n");
-            return 1;
-        }
-
-        if(timeoutFlag){
-            int res = write(rx_fd, cmdDisc, 5);
-            if(res < 0){
-                fprintf(stderr, "Error writing to serial port");
-                return -1;
-            }
-            printf("DISC sent back again", res);
-            timeoutCount++;
-        }
-    }    
-
-    return -1;
-} */
+    return 1;
+}

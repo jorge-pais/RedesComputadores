@@ -2,15 +2,13 @@
 
 /* 
 Globally declared serial terminal file descriptor
-and linklayer parameters
+and linklayer connection parameters
 */
 static int tx_fd;
 linkLayer *tx_connectionParameters;
 
 static u_int8_t tx_lastSeqNumber = 0; // Ns = 0, 1
 u_int8_t timeoutFlag, timerFlag, timeoutCount;
-
-//static int sequenceBit = 0;
 
 int transmitter_llopen(linkLayer connectionParameters){
 
@@ -43,7 +41,7 @@ int transmitter_llopen(linkLayer connectionParameters){
         int readResult = checkHeader(tx_fd, cmdUA, 5);
 
         if(readResult < 0){
-            printf("Error reading command from serial port");
+            fprintf(stderr, "Error reading command from serial port");
             return -1;
         }
         else if(readResult > 0){ //Success
@@ -121,7 +119,7 @@ int llwrite(char *buf, int bufSize){
     // Write for the first time
     int res = write(tx_fd, frame, frameSize);
     if(res < 0){
-        printf("error writing to serial port");
+        fprintf(stderr, "error writing to serial port");
         free(frame);
         return -1;
     }
@@ -173,7 +171,7 @@ int llwrite(char *buf, int bufSize){
     return -1;
 }
 
-/* int transmitter_llclose(int showStatistics){
+int transmitter_llclose(int showStatistics){
 
     // DISC frame header
     u_int8_t cmdDisc[] = {FLAG, A_tx, C_DISC, A_tx ^ C_DISC, FLAG};
@@ -185,29 +183,29 @@ int llwrite(char *buf, int bufSize){
     int res = write(tx_fd, cmdDisc, 5);
     if(res < 0){
         fprintf(stderr, "Error writing to serial port");
-        return NULL;
+        return -1;
     }
-    printf("Disconnect command sent\n");
+    DEBUG_PRINT("Disconnect command sent\n");
 
     int timeoutCount = 0;
 
     timeoutFlag = 0, timeoutCount = 0, timerFlag = 1;
 
-    while (timeoutCount < connectionParameters.timeOut){
+    while (timeoutCount < tx_connectionParameters->numTries){
         if(timerFlag){
-            alarm(3);
+            alarm(tx_connectionParameters->timeOut);
             timerFlag = 0;
         }
 
         int readResult = checkHeader(tx_fd, cmdDisc, 5);
 
         if(readResult < 0){
-            fprintf(stderr, "Error reading command from serial port");
-            return NULL;
+            fprintf(stderr, "Error reading from serial port");
+            return -1;
         }
         else if(readResult > 0){ //Success
             signal(SIGALRM, SIG_IGN); //disable interrupt handler
-            printf("Received Disconnection confirm, sending UA\n");
+            DEBUG_PRINT("Received Disconnection confirm, sending UA\n");
             break;
         }
 
@@ -215,24 +213,27 @@ int llwrite(char *buf, int bufSize){
             int res = write(tx_fd, cmdDisc, 5);
             if(res < 0){
                 fprintf(stderr, "Error writing to serial port");
-                return NULL;
+                return -1;
             }
-            printf("Disconnect command sent again\n");
+            DEBUG_PRINT("Disconnect command sent again\n");
             timeoutCount++;
         }
     }    
     
     if(write(tx_fd, cmdUA, 5) < 0){
         fprintf(stderr, "Error writing to serial port");
-        return NULL;
+        return -1;
     }
-    printf("UA control sent\n");
+    DEBUG_PRINT("UA control sent\n");
+
+    closeSerialterminal(tx_fd);
+
     return 1;
-} */
+}
 
 u_int8_t *byteStuffing(u_int8_t *data, int dataSize, int *outputDataSize){
     if(data == NULL || outputDataSize == NULL){
-        printf("one or more parameters are invalid\n");
+        fprintf(stderr, "one or more parameters are invalid\n");
         return NULL;
     }
 

@@ -10,13 +10,13 @@ int configureSerialterminal(linkLayer connectionParameters){
     int fd = open(connectionParameters.serialPort, O_RDWR | O_NOCTTY);
     
     if (fd < 0){
-        printf("Couldn't open %s\n", connectionParameters.serialPort);
+        fprintf(stderr, "Couldn't open %s\n", connectionParameters.serialPort);
         exit(-1);
     }
 
     //copy current serial port configuration
     if(tcgetattr(fd, &oldtio) == -1){
-        printf("couldn't save current port settings\n");
+        fprintf(stderr, "couldn't save current port settings\n");
         exit(-1);
     }
     
@@ -442,7 +442,7 @@ speed_t convertBaudRate(int baud){
             return B614400;
         #endif
         break;
-    //non-SPARC architectures
+    //non-SPARC architectures (not in POSIX)
     case 2500000:
         #ifndef B2500000
             return BAUDRATE_DEFAULT;
