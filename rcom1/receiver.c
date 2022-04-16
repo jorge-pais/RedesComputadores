@@ -5,10 +5,15 @@ Globally declared serial terminal file descriptor
 and linklayer parameters
 */
 static int rx_fd;
-linkLayer rx_connectionParameters;
-u_int8_t haltRead = 0;
 
-static u_int8_t rx_lastSeqNumber = 0; //Nr = 0, 1
+linkLayer *rx_connectionParameters;
+
+/* // OLD llread() global variables
+u_int8_t haltRead = 0;
+static u_int8_t rx_lastSeqNumber = 0; //Nr = 0, 1 */
+
+//Last successfully read I frame sequence number
+static u_int8_t rx_prevSeqNum = 1;
 
 int receiver_llopen(linkLayer connectionParameters){
 
@@ -26,7 +31,7 @@ int receiver_llopen(linkLayer connectionParameters){
     }
     printf("Received SET, sending UA\n");
 
-    // Now we've got to send a UA reply to tx
+    // UA frame reply
     u_int8_t repUA[] = {FLAG, A_tx, C_UA, (A_tx ^ C_UA), FLAG};
 
     if(write(rx_fd, repUA, 5) < 0){
@@ -37,7 +42,7 @@ int receiver_llopen(linkLayer connectionParameters){
     return 0;
 }
 
-int llread(char *packet){
+/* int llread(char *packet){
     if(packet == NULL)
         return -1;
 
@@ -54,31 +59,32 @@ int llread(char *packet){
     int res, i, destuffedDataSize;
 
     u_int8_t *dataField = malloc(2*MAX_PAYLOAD_SIZE + 3); 
-    /*
-    Maybe use double buffering (front and back buffers) for destuffedData
-    using globally declared pointers
-    We could use this to store the next packet, instead of
-    only reading the next frame header and discarding the data field
-    */
+    
+    // Maybe use double buffering??
     u_int8_t *destuffedData;
 
     while(!STOP){
         res = checkHeader(rx_fd, dataFrameHeader, 4);
+        
         if(res < 0) //In case of error, or 3 seconds have elapsed
             return -1;
 
         if(!duplicateFlag){ //If we haven't yet received an error-free frame
             rx_byte = 0x00, i = 0;
-            while (rx_byte != FLAG){
-                res = read(rx_fd, &rx_byte, 1);
-                DEBUG_PRINT("[llread() read] 0x%02x\n", rx_byte);
+            res = read(rx_fd, &rx_byte, 1);
+            if(res < 0)
+                return -1;
+            do{
                 dataField[i++] = rx_byte;
-            }
+                res = read(rx_fd, &rx_byte, 1);
+                if(res < 0)
+                    return -1;
+            } while (rx_byte != FLAG); //Read data field
 
             //We're only interested in the vector up until BCC2 (length: i-1)
-            destuffedData = byteDestuffing(dataField, i - 1, &destuffedDataSize);
+            destuffedData = byteDestuffing(dataField, i, &destuffedDataSize);
             u_int8_t BCC2 = generateBCC(destuffedData, destuffedDataSize - 1);
-            DEBUG_PRINT("%2x \n", BCC2);
+            //DEBUG_PRINT("%2x \n", BCC2);
 
             if(destuffedData[destuffedDataSize - 1] == BCC2){
                 DEBUG_PRINT("BCC2 checks out, sending RR\n");
@@ -105,8 +111,8 @@ int llread(char *packet){
 
         //Check if the same data frame is being retransmitted
         DEBUG_PRINT("Checking if we've already received this frame\n");
-        res = readSUControlField(rx_fd, 4);
-        printf("0x%02x\n", res);
+        res = readControlField(rx_fd, 4);
+        //printf("0x%02x\n", res);
 
         if(res == 0xFF) //error reading control field
             return -1;
@@ -120,7 +126,7 @@ int llread(char *packet){
     //Update seq number
     rx_lastSeqNumber = !rx_lastSeqNumber;
     
-    //Copy whatever's has been read
+    //Copy whatever's has been read to *packet
     //We assume that char* packet has at least MAX_PAYLOAD_SIZE bytes allocated
     DEBUG_PRINT("writting data to packet\n");
     for (int i = 0; i < destuffedDataSize - 1; i++)
@@ -128,11 +134,102 @@ int llread(char *packet){
     free(destuffedData);
     
     return (destuffedDataSize - 1);
+} */
+
+// New llread
+int llread(char *packet){
+    DEBUG_PRINT("[llopen() call] %d \n", rx_prevSeqNum);
+    if(packet == NULL)
+        return -1;
+
+    u_int8_t *datafield = malloc(2*MAX_PAYLOAD_SIZE +3);
+
+    if(datafield == NULL)
+        return -1;
+
+    //possible reply frames
+    u_int8_t repRR[] = {FLAG, A_tx, C_RR(rx_prevSeqNum), (A_tx ^ C_RR(rx_prevSeqNum)), FLAG};
+    u_int8_t repREJ[] = {FLAG, A_tx, C_REJ(!rx_prevSeqNum), (A_tx ^ C_REJ(!rx_prevSeqNum)), FLAG};
+
+    u_int8_t *destuffedData;
+    u_int8_t STOP = 0, rx_byte, BCC2, currSeqNum;
+    int res, i, destuffedDataSize;
+
+    while(!STOP){
+        res = readControlField(rx_fd, 4);
+        if(res == 0xFF)
+            return -1;
+        else if(res != C(0) && res != C(1)) // not an I frame
+            return 0;
+        
+        currSeqNum = I_SEQ(res);
+        DEBUG_PRINT("RECEIVED SEQ NUMBER: %d\n", currSeqNum);
+
+        if (currSeqNum == !rx_prevSeqNum){ //This is a new I frame
+            DEBUG_PRINT("NEW I FRAME\n");
+            
+            // Read stuffed data field, excluding FLAG
+            i = 0;
+            res = read(rx_fd, &rx_byte, 1);
+            if(res < 0)
+                return -1;
+            do{
+                DEBUG_PRINT("[llopen()] 0x%02x\n", rx_byte);
+                datafield[i++] = rx_byte;
+                res = read(rx_fd, &rx_byte, 1);
+                if(res < 0)
+                    return -1;
+            } while (rx_byte != FLAG);
+            
+            destuffedData = byteDestuffing(datafield, i, &destuffedDataSize);
+
+            BCC2 = generateBCC(destuffedData, destuffedDataSize - 1);
+            if(destuffedData[destuffedDataSize-1] == BCC2){
+                DEBUG_PRINT("BCC2 CHECKS OUT\n");
+                free(datafield);
+                //send RR
+                res = write(rx_fd, repRR, 5);
+                if(res < 0){
+                    free(destuffedData);
+                    return -1;
+                }
+                rx_prevSeqNum = !rx_prevSeqNum;
+                STOP = 1; //break;
+            }
+            else{
+                DEBUG_PRINT("WRONG BCC2\n");
+                free(datafield);
+                free(destuffedData);
+                res = write(rx_fd, repREJ, 5);
+                if(res < 0)
+                    return -1;
+                //continue;
+            }
+        }
+        else{ //In case of duplicate I frame
+            DEBUG_PRINT("DUPLICATE FRAME\n");
+            u_int8_t repRR_rej[] = {FLAG, A_tx, C_RR(!rx_prevSeqNum), (A_tx ^ C_RR(!rx_prevSeqNum)), FLAG};
+            res = write(rx_fd, repRR_rej, 5);
+            if(res < 0)
+                return -1;
+            do{ //Dummy read, useless
+                res = read(rx_fd, &rx_byte, 1);
+            } while (rx_byte != FLAG);
+        }
+    }
+
+
+    for (int i = 0; i < destuffedDataSize; i++)
+        packet[i] = destuffedData[i];
+
+    free(destuffedData);
+
+    return (destuffedDataSize - 1);
 }
 
 u_int8_t *byteDestuffing(u_int8_t *data, int dataSize, int *outputDataSize){
     if(data == NULL || outputDataSize == NULL){
-        printf("invalid parameters in function call");
+        fprintf(stderr, "invalid parameters in function call");
         return NULL;
     }
     
@@ -194,6 +291,8 @@ int receiver_llclose(int showStatistics){
         fprintf(stderr, "Error reading from serial port");
         return -1;
     }
+
+    free(rx_connectionParameters);
 
     closeSerialterminal(rx_fd);
 

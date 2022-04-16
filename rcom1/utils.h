@@ -44,11 +44,11 @@ Tries to read and then output the control field of a
 supervision frame header (RR or REJ)
 
 Return values:
-    RR or REJ control field - the header was read successfully
+    frame control field - the header was read successfully
     0xFE - nothing was read
     0xFF - error while reading
 */
-u_int8_t readSUControlField(int fd, int cmdLen);
+u_int8_t readControlField(int fd, int cmdLen);
 
 /*
 Convert an int to the apropriate speed_t that termios understands,
