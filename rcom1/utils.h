@@ -8,10 +8,10 @@
 Globally declared termios structures, and serial terminal 
 file descriptor
 */
-//static struct termios oldtio, newtio;
+// static struct termios oldtio, newtio;
 
 /*
-Configure serial port terminal I/O
+Configure serial port terminal I/O using linkLayer
 Return values:
     file descriptor id - If successful
 */
@@ -29,6 +29,9 @@ int closeSerialterminal(int fd);
 Tries to read a specific header for a given frame, only works
 for valid header lenghts of either 4 or 5 bytes
 
+This function is protected by a timer, after 3 seconds of
+if nothing is read it'll return 0
+
 Return values:
     1   - the command was read successfully
     0   - couldn´t read anything
@@ -42,9 +45,10 @@ supervision frame header (RR or REJ)
 
 Return values:
     RR or REJ control field - the header was read successfully
+    0xFE - nothing was read
     0xFF - error while reading
 */
-u_int8_t readSupervisionHeader(int fd);
+u_int8_t readSUControlField(int fd, int cmdLen);
 
 /*
 Convert an int to the apropriate speed_t that termios understands,
@@ -78,5 +82,15 @@ Return Values
     -1  - somekind of error
 */
 u_int8_t generateBCC(u_int8_t *data, int dataSize);
+
+/* 
+Check and copy linklayer parameters
+Invalid values are given default values assigned in linklayer.h
+
+Return Values
+    pointer to new struct
+    NULL - error
+*/
+linkLayer *checkParameters(linkLayer link);
 
 #endif

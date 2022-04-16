@@ -3,8 +3,28 @@
 
 #include "utils.h"
 
+/* 
+Transmitter end of llopen() which is then passed on to the
+actual function
+
+Return values
+    1 - on successful connection establishment
+    -1 - on error
+*/
 int transmitter_llopen(linkLayer connectionParameters);
-int transmitter_llclose(linkLayer connectionParameters);
+
+/*
+Transmitter end of llclose()
+
+Return values
+    1 - on success
+    -1 - on error
+*/
+int transmitter_llclose(int showStatistics);
+
+/*
+Auxiliary timeout function for handling SIGALRM signals
+*/
 void timeOut();
 
 /*
@@ -14,11 +34,11 @@ Return values:
     pointer to a new vector 
     NULL - somekind of error
 */
-u_int8_t *byteStuffing(unsigned char *data, int dataSize, int *outputDataSize);
+u_int8_t *byteStuffing(u_int8_t *data, int dataSize, int *outputDataSize);
 
 /*
 Prepare an Information Frame 
 */
-u_int8_t *prepareInfoFrame(char *buf, int bufSize, int *outputSize, u_int8_t sequenceBit);
+u_int8_t *prepareInfoFrame(u_int8_t *buf, int bufSize, int *outputSize, u_int8_t sequenceBit);
 
 #endif
