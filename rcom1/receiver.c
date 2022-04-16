@@ -14,10 +14,6 @@ int receiver_llopen(linkLayer connectionParameters){
 
     // Save connection parameters
     rx_connectionParameters = *checkParameters(connectionParameters); 
-    
-    //declare global variables (?)
-    int global = declareGlobal(rx_connectionParameters);
-    if(global<0) printf("Global Variables declaration failed\n");
 
     rx_fd = configureSerialterminal(rx_connectionParameters);
 
