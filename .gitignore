@@ -6,3 +6,8 @@ Aula2/transmitter
 Aula2/cable
 rcom1/testApp
 rcom1/a.out
+rcom1/application/main
+rcom1/protocol/linklayer.o
+rcom1/protocol/receiver.o
+rcom1/protocol/transmitter.o
+rcom1/protocol/utils.o
