@@ -18,9 +18,9 @@ static u_int8_t rx_prevSeqNum = 1;
 int receiver_llopen(linkLayer connectionParameters){
 
     // Save connection parameters
-    rx_connectionParameters = *checkParameters(connectionParameters); 
+    rx_connectionParameters = checkParameters(connectionParameters); 
 
-    rx_fd = configureSerialterminal(rx_connectionParameters);
+    rx_fd = configureSerialterminal(*rx_connectionParameters);
 
     // We're expecting a SET command from tx
     u_int8_t cmdSET[] = {FLAG, A_tx, C_SET, (A_tx ^ C_SET), FLAG};
