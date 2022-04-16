@@ -1,6 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <time.h>
 #include "linklayer.h"
 #include "definitions.h"
 
