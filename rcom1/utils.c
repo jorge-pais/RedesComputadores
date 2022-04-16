@@ -32,7 +32,8 @@ int configureSerialterminal(linkLayer connectionParameters){
     //Set local configuration
     newtio.c_lflag = 0;
 
-    newtio.c_cc[VTIME]    = (connectionParameters.timeOut * 10); // Set the read() timeout for 3 seconds
+    //Set the read() timeout for 3 seconds
+    newtio.c_cc[VTIME]    = (connectionParameters.timeOut * 10);
     newtio.c_cc[VMIN]     = 0;  // Set minimum of characters to be read
 
     tcflush(fd, TCIOFLUSH); // flush whatever's in the buffer
@@ -68,7 +69,8 @@ int checkHeader(int fd, u_int8_t *cmd, int cmdLen){
     while(state < cmdLen){
         res = read(fd, &rx_byte, 1);
         if(res > 0) //Something was read
-            DEBUG_PRINT("[checkHeader()] received byte: 0x%02x -- state: %d \n", rx_byte, state);
+            DEBUG;
+            //DEBUG_PRINT("[checkHeader()] received byte: 0x%02x -- state: %d \n", rx_byte, state);
         else //Nothing has been read or some kind of error
             break;
         switch(state){ //State machine
@@ -120,15 +122,16 @@ int checkHeader(int fd, u_int8_t *cmd, int cmdLen){
     return 0;
 }
 
-u_int8_t readSUControlField(int fd, int cmdLen){
+u_int8_t readControlField(int fd, int cmdLen){
     
-    u_int8_t controlField, rx_byte;
+    u_int8_t cField, rx_byte;
     int state = 0, res;
 
     while(state != cmdLen){
         res = read(fd, &rx_byte, 1);
         if(res > 0) //Something was read after 3 seconds
-            DEBUG_PRINT("[readSUControlField()]received byte: 0x%02x -- state: %d \n", rx_byte, state);
+            //DEBUG;
+            DEBUG_PRINT("[readControlField()]received byte: 0x%02x -- state: %d \n", rx_byte, state);
         else //Nothing has been read or some kind of error
             break;
         switch(state){ //State machine
@@ -139,7 +142,7 @@ u_int8_t readSUControlField(int fd, int cmdLen){
                 state = 0;
             break;
             case 1: //Address field
-            if(rx_byte==A_tx) 
+            if(rx_byte==A_tx || rx_byte==A_rx) 
                 state = 2;
             else if(rx_byte==FLAG)
                 state = 1;
@@ -151,11 +154,11 @@ u_int8_t readSUControlField(int fd, int cmdLen){
                 state = 1;
             else{
                 state = 3;
-                controlField = rx_byte;
+                cField = rx_byte;
             }
             break;
             case 3:
-            if(rx_byte == (controlField^A_tx)) //BCC1
+            if(rx_byte == (cField^A_tx) || rx_byte == (cField^A_rx)) //BCC1
                 state = 4;
             else if(rx_byte == FLAG)
                 state = 1;
@@ -170,13 +173,15 @@ u_int8_t readSUControlField(int fd, int cmdLen){
             break;
         }
     }
-    if(state == cmdLen) // C_RR; C_REJ; C(S)
-        if((controlField & 0x01) == 0x01 || (controlField & 0x05) == 0x05 || (controlField == 0x00 || controlField == 0x02) || controlField == C_SET || controlField == C_DISC || controlField == C_UA) //Check 
-            return controlField;
+    if(state == cmdLen){
+        if((cField == C_RR(0) || cField == C_RR(1)) || (cField == C_REJ(0) || cField == C_REJ(1)) || (cField == C(0) || cField == C(1)) || cField == C_SET || cField == C_DISC || cField == C_UA) //Check 
+            return cField;
+    }
     
-    if(res == 0)
+    if(res == 0) // Nothing was read for VTIME sec
         return 0xFE;
-    // In case nothing could be read, or was wrong
+
+    // In case of error while reading (res < 0)
     return 0xFF;
 }
 

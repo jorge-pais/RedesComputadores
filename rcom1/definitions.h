@@ -13,9 +13,10 @@
 #define C_UA        0x07    //0b00000111
 #define C_RR(R)     ((R<<5) + 1)  //R = Nr = 0, 1 
 #define C_REJ(R)    ((R<<5) + 5)  //R = Nr = 0, 1
-#define SU_SEQ(C)   ((C & 0b00100000) >> 5)
+#define SU_SEQ(C)   ((C & 0b00100000) >> 5) //extract sequence number from control field
 //Information frame control
 #define C(S)        (S<<1)      //S = Ns
+#define I_SEQ(C)    (C>>1)
 
 #define DEBUG
 #ifdef DEBUG

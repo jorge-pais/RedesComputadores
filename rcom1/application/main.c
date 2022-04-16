@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
 		while (bytes_read > 0) {
 			bytes_read = read(file_desc, buffer+1, buf_size);
 			if(bytes_read < 0) {
-				fprintf(stderr, "Error receiving from link layer\n");
+				fprintf(stderr, "Error reading from file descriptor\n");
 				break;
 			}
 			else if (bytes_read > 0) {

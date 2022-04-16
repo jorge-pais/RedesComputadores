@@ -38,6 +38,10 @@ u_int8_t *byteStuffing(u_int8_t *data, int dataSize, int *outputDataSize);
 
 /*
 Prepare an Information Frame 
+
+Return Values:
+    pointer to frame byte array - success
+    NULL - somekind of error
 */
 u_int8_t *prepareInfoFrame(u_int8_t *buf, int bufSize, int *outputSize, u_int8_t sequenceBit);
 
