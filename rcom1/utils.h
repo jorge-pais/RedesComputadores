@@ -18,6 +18,14 @@ Return values:
 int configureSerialterminal(linkLayer connectionParameters);
 
 /*
+Declares connection parameters to global variables
+Return values:
+    1 - success
+    -1 - error
+*/
+int declareGlobal(linkLayer connectionParameters);
+
+/*
 Close Serial Port Terminal connection upon llclose()
 Return values:
      1 - connection closed successfully

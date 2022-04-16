@@ -45,6 +45,17 @@ int configureSerialterminal(linkLayer connectionParameters){
     return fd;
 }
 
+int declareGlobal(linkLayer connectionParameters){
+    for(int i = 0; i < sizeof(connectionParameters.serialPort)/sizeof(connectionParameters.serialPort[0]); i++){
+        globalSeriaPort[i] = connectionParameters.serialPort[i];
+    }
+    globalRole = connectionParameters.role;
+    globalBaudRate = connectionParameters.baudRate;
+    globalNumTries = connectionParameters.numTries;
+    globalTimeOut = connectionParameters.timeOut;
+    return -1;
+}
+
 int closeSerialterminal(int fd){
     
     tcflush(fd, TCIOFLUSH); // flush whatever's in the buffer

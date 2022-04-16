@@ -5,7 +5,7 @@ Globally declared serial terminal file descriptor
 and linklayer parameters
 */
 static int rx_fd;
-linkLayer *rx_connectionParameters;
+linkLayer rx_connectionParameters;
 u_int8_t haltRead = 0;
 
 static u_int8_t rx_lastSeqNumber = 0; //Nr = 0, 1
@@ -13,9 +13,13 @@ static u_int8_t rx_lastSeqNumber = 0; //Nr = 0, 1
 int receiver_llopen(linkLayer connectionParameters){
 
     // Save connection parameters
-    rx_connectionParameters = checkParameters(connectionParameters); 
+    rx_connectionParameters = *checkParameters(connectionParameters); 
+    
+    //declare global variables (?)
+    int global = declareGlobal(rx_connectionParameters);
+    if(global<0) printf("Global Variables declaration failed\n");
 
-    rx_fd = configureSerialterminal(*rx_connectionParameters);
+    rx_fd = configureSerialterminal(rx_connectionParameters);
 
     // We're expecting a SET command from tx
     u_int8_t cmdSET[] = {FLAG, A_tx, C_SET, (A_tx ^ C_SET), FLAG};

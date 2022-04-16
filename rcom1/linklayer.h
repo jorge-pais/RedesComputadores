@@ -19,6 +19,14 @@ typedef struct linkLayer{
     int timeOut;
 } linkLayer;
 
+
+//global variables for connection parameters (?)
+char globalSeriaPort[50];
+int globalRole;
+int globalBaudRate;
+int globalNumTries;
+int globalTimeOut;
+
 //ROLE
 #define NOT_DEFINED -1
 #define TRANSMITTER 0
