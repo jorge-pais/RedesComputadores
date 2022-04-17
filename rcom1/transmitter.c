@@ -206,6 +206,7 @@ int llwrite(char *buf, int bufSize){
             writeEventToFile(tx_stats, &tx_now, "(Retransmission) Written ");
             fprintf(tx_stats, "%d bytes to serial port\n", res);
 
+            stat_txIFrames++;
             stat_retransmittionCount++;
             //printf("%d bytes written\n", res);
 
@@ -222,10 +223,12 @@ int llwrite(char *buf, int bufSize){
             writeEventToFile(tx_stats, &tx_now, "(Retransmission) Written ");
             fprintf(tx_stats, "%d bytes to serial port\n", res);
 
+            stat_txIFrames++;
             stat_retransmittionCount++;
+            stat_timeOutsCount++;
+
             //printf("%d bytes written\n", res);
             timeoutCount++;
-            stat_timeOutsCount++;
             timeoutFlag = 0;
         }
     }

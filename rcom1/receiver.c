@@ -7,7 +7,7 @@ and linklayer parameters
 static int rx_fd;
 linkLayer *rx_connectionParameters;
 
-//File for event logs
+//File and time_t for event logs
 FILE *rx_stats;
 char rx_event_fileName[] = "rx_statistics";
 time_t rx_now;
@@ -83,8 +83,10 @@ int llread(char *packet){
         res = readControlField(rx_fd, 4);
         if(res == 0xFF || res == C_DISC)
             return -1;
-        else if(res != C(0) && res != C(1)) // not an I frame
+        else if(res != C(0) && res != C(1)){ // not an I frame
+            writeEventToFile(rx_stats, &rx_now, "Didn't receive I frame\n");
             return 0;
+        }
         
         currSeqNum = I_SEQ(res);
 
@@ -259,7 +261,7 @@ int receiver_llclose(int showStatistics){
         printf("# of REJ frames sent: %d \n", stat_rxRejCount);
         printf("# of duplicate frames received: %d \n", stat_duplicatesReceived);
         
-        printf("Press any key to open up event log\n");
+        printf("Press enter to open up event log\n");
         getchar();
 
         char command[100] = "less ";
