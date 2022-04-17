@@ -63,12 +63,14 @@ int llread(char *packet){
     writeEventToFile(rx_stats, &rx_now, "llread() called\n");
     //DEBUG_PRINT("[llopen() call] %d \n", rx_prevSeqNum);
     if(packet == NULL)
+        writeEventToFile(rx_stats, &rx_now, "Error during llread() - invalid parameter\n");
         return -1;
 
     u_int8_t *datafield = malloc(2*MAX_PAYLOAD_SIZE +3);
     u_int8_t *destuffedData;
 
     if(datafield == NULL)
+        writeEventToFile(rx_stats, &rx_now, "Error during llread() - datafield memory allocation failed\n");
         return -1;
 
     //possible reply frames
@@ -81,8 +83,10 @@ int llread(char *packet){
 
     while(!STOP){
         res = readControlField(rx_fd, 4);
-        if(res == 0xFF || res == C_DISC)
+        if(res == 0xFF || res == C_DISC){
+            writeEventToFile(rx_stats, &rx_now, "Error during llread() - Packet's control field invalid\n");
             return -1;
+        }
         else if(res != C(0) && res != C(1)) // not an I frame
             return 0;
         
@@ -96,12 +100,14 @@ int llread(char *packet){
             i = 0;
             res = read(rx_fd, &rx_byte, 1);
             if(res < 0)
+                writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not read stuffed data field\n");
                 return -1;
             do{
                 //DEBUG_PRINT("[llopen()] 0x%02x\n", rx_byte);
                 datafield[i++] = rx_byte;
                 res = read(rx_fd, &rx_byte, 1);
                 if(res < 0)
+                    writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not read stuffed data field\n");
                     return -1;
             } while (rx_byte != FLAG);
             
@@ -123,6 +129,7 @@ int llread(char *packet){
                 //send RR
                 res = write(rx_fd, repRR, 5);
                 if(res < 0){
+                    writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not send RR\n");
                     free(datafield);
                     free(destuffedData);
                     return -1;
@@ -140,6 +147,7 @@ int llread(char *packet){
                 stat_rxRejCount++;
 
                 if(res < 0){
+                    writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not send REJ\n");
                     free(datafield);
                     return -1;
                 }
@@ -153,6 +161,7 @@ int llread(char *packet){
             u_int8_t repRR_rej[] = {FLAG, A_tx, C_RR(!rx_prevSeqNum), (A_tx ^ C_RR(!rx_prevSeqNum)), FLAG};
             res = write(rx_fd, repRR_rej, 5);
             if(res < 0){
+                writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not send RR\n");
                 free(datafield);
                 return -1;
             }
@@ -176,12 +185,14 @@ int llread(char *packet){
 
 u_int8_t *byteDestuffing(u_int8_t *data, int dataSize, int *outputDataSize){
     if(data == NULL || outputDataSize == NULL){
-        fprintf(stderr, "invalid parameters in function call");
+        writeEventToFile(rx_stats, &rx_now, "Error during byteDestuffing() - invalid parameters in function call\n");
+        //fprintf(stderr, "invalid parameters in function call");
         return NULL;
     }
     
     u_int8_t *destuffedData = malloc(dataSize);
     if(destuffedData == NULL)
+        writeEventToFile(rx_stats, &rx_now, "Error during byteDestuffing() - destuffedData memory allocation failed\n");
         return NULL;
 
     int size = 0;
@@ -200,6 +211,7 @@ u_int8_t *byteDestuffing(u_int8_t *data, int dataSize, int *outputDataSize){
                 break;
             default: //invalid escape character use
                 free(destuffedData);
+                writeEventToFile(rx_stats, &rx_now, "Error during byteDestuffing() - invalid invalid escape character used\n");
                 return NULL;
                 break;
             }
@@ -208,6 +220,7 @@ u_int8_t *byteDestuffing(u_int8_t *data, int dataSize, int *outputDataSize){
     if(size != dataSize){
         destuffedData = realloc(destuffedData, size);
         if(destuffedData == NULL)
+            writeEventToFile(rx_stats, &rx_now, "Error during byteDestuffing() - destuffedData memory reallocation failed\n");
             return NULL;
     }
 
