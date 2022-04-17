@@ -148,6 +148,7 @@ int llread(char *packet){
         return -1;
 
     u_int8_t *datafield = malloc(2*MAX_PAYLOAD_SIZE +3);
+    u_int8_t *destuffedData;
 
     if(datafield == NULL)
         return -1;
@@ -156,7 +157,7 @@ int llread(char *packet){
     u_int8_t repRR[] = {FLAG, A_tx, C_RR(rx_prevSeqNum), (A_tx ^ C_RR(rx_prevSeqNum)), FLAG};
     u_int8_t repREJ[] = {FLAG, A_tx, C_REJ(!rx_prevSeqNum), (A_tx ^ C_REJ(!rx_prevSeqNum)), FLAG};
 
-    u_int8_t *destuffedData;
+    
     u_int8_t STOP = 0, rx_byte, BCC2, currSeqNum;
     int res, i, destuffedDataSize;
 
@@ -168,7 +169,6 @@ int llread(char *packet){
             return 0;
         
         currSeqNum = I_SEQ(res);
-        DEBUG_PRINT("RECEIVED SEQ NUMBER: %d\n", currSeqNum);
 
         if (currSeqNum == !rx_prevSeqNum){ //This is a new I frame
             DEBUG_PRINT("NEW I FRAME\n");
@@ -179,7 +179,7 @@ int llread(char *packet){
             if(res < 0)
                 return -1;
             do{
-                DEBUG_PRINT("[llopen()] 0x%02x\n", rx_byte);
+                //DEBUG_PRINT("[llopen()] 0x%02x\n", rx_byte);
                 datafield[i++] = rx_byte;
                 res = read(rx_fd, &rx_byte, 1);
                 if(res < 0)
@@ -189,12 +189,21 @@ int llread(char *packet){
             destuffedData = byteDestuffing(datafield, i, &destuffedDataSize);
 
             BCC2 = generateBCC(destuffedData, destuffedDataSize - 1);
+
+            #ifdef test_data_corruption
+            {
+            if(rand() % 4 == 2)
+                BCC2++;
+            }
+            #endif
+
             if(destuffedData[destuffedDataSize-1] == BCC2){
                 DEBUG_PRINT("BCC2 CHECKS OUT\n");
-                free(datafield);
+                //free(datafield);
                 //send RR
                 res = write(rx_fd, repRR, 5);
                 if(res < 0){
+                    free(datafield);
                     free(destuffedData);
                     return -1;
                 }
@@ -203,12 +212,16 @@ int llread(char *packet){
             }
             else{
                 DEBUG_PRINT("WRONG BCC2\n");
-                free(datafield);
+                
                 free(destuffedData);
                 res = write(rx_fd, repREJ, 5);
+
                 rxRejCount++;
-                if(res < 0)
+
+                if(res < 0){
+                    free(datafield);
                     return -1;
+                }
                 //continue;
             }
         }
@@ -217,18 +230,22 @@ int llread(char *packet){
             duplicatesReceived++;
             u_int8_t repRR_rej[] = {FLAG, A_tx, C_RR(!rx_prevSeqNum), (A_tx ^ C_RR(!rx_prevSeqNum)), FLAG};
             res = write(rx_fd, repRR_rej, 5);
-            if(res < 0)
+            if(res < 0){
+                free(datafield);
                 return -1;
+            }
+                
             do{ //Dummy read, useless
                 res = read(rx_fd, &rx_byte, 1);
-            } while (rx_byte != FLAG);
+            } while (rx_byte != FLAG || res == 0);
         }
     }
 
-
+    DEBUG_PRINT("WRITE DATA FRAME TO PACKET\n");
     for (int i = 0; i < destuffedDataSize; i++)
         packet[i] = destuffedData[i];
 
+    free(datafield);
     free(destuffedData);
 
     return (destuffedDataSize - 1);
