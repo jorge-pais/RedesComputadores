@@ -18,11 +18,16 @@
 #define C(S)        (S<<1)      //S = Ns
 #define I_SEQ(C)    (C>>1)
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
     #define DEBUG_PRINT(str, ...) printf(str, ##__VA_ARGS__)
 #else
     #define DEBUG_PRINT(str, ...)
 #endif
+
+//testing variables
+#define testing
+#define test_data_corruption
+#define test_missing_su_frame
 
 #endif

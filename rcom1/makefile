@@ -10,6 +10,7 @@ object:
 	$(CC) $(C_FLAGS) linklayer.c receiver.c utils.c transmitter.c -c
 	cp *.o protocol/ 
 	rm -f *.o
+	cd application && ./build.sh 
 
 clean:
 	rm -f testApp a.out application/main

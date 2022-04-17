@@ -7,6 +7,12 @@ static int serialRole;
 
 int llopen(linkLayer connectionParameters){
     
+    #ifdef testing
+    {
+    srand(time(NULL));
+    }
+    #endif
+    
     if(connectionParameters.role == TRANSMITTER){
         serialRole = TRANSMITTER;
         return transmitter_llopen(connectionParameters);

@@ -7,7 +7,21 @@ and linklayer connection parameters
 static int tx_fd;
 linkLayer *tx_connectionParameters;
 
+//File for event logs
+FILE *tx_stats;
+char tx_event_fileName[] = "tx_statistics";
+time_t tx_now;
+
+//ERROR COUNTERS for statistics
+int stat_txRejCount = 0;
+int stat_txIFrames = 0;
+int stat_timeOutsCount = 0; //different from timeoutCount
+int stat_retransmittionCount = 0;
+
+// llwrite()
 static u_int8_t tx_currSeqNumber = 0; // Ns = 0, 1
+
+//timeout related functions
 u_int8_t timeoutFlag, timerFlag, timeoutCount;
 
 int transmitter_llopen(linkLayer connectionParameters){
@@ -15,6 +29,13 @@ int transmitter_llopen(linkLayer connectionParameters){
     tx_connectionParameters = checkParameters(connectionParameters);
     
     tx_fd = configureSerialterminal(*tx_connectionParameters);
+
+    // open event log file
+    tx_stats = fopen(tx_event_fileName, "w");
+    if(tx_stats == NULL)
+        return -1;
+
+    writeEventToFile(tx_stats, &tx_now, "llopen() called\n");
 
     // SET frame header
     u_int8_t cmdSet[] = {FLAG, A_tx, C_SET, (A_tx ^ C_SET), FLAG};
@@ -25,10 +46,13 @@ int transmitter_llopen(linkLayer connectionParameters){
 
     int res = write(tx_fd, cmdSet, 5);
     if(res < 0){
-        fprintf(stderr, "Error writing to serial port");
+        writeEventToFile(tx_stats, &tx_now, "Error writing to serial port\n");
+        fclose(tx_stats);
+        //fprintf(stderr, "Error writing to serial port");
         return -1;
     }
-    printf("%d bytes written\n", res);
+    writeEventToFile(tx_stats, &tx_now, "Sending SET command\n");
+    //printf("%d bytes written\n", res);
 
     timeoutFlag = 0, timeoutCount = 0, timerFlag = 1;
 
@@ -41,10 +65,12 @@ int transmitter_llopen(linkLayer connectionParameters){
         int readResult = checkHeader(tx_fd, cmdUA, 5);
 
         if(readResult < 0){
-            fprintf(stderr, "Error reading command from serial port");
+            writeEventToFile(tx_stats, &tx_now, "Error reading command from serial port\n");
+            //fprintf(stderr, "Error reading command from serial port");
             return -1;
         }
         else if(readResult > 0){ //Success
+            writeEventToFile(tx_stats, &tx_now, "Connection established\n");
             signal(SIGALRM, SIG_IGN); //disable interrupt handler
             //printf("Received UA, connection established\n");
             return 1;
@@ -54,13 +80,20 @@ int transmitter_llopen(linkLayer connectionParameters){
             int res = write(tx_fd, cmdSet, 5);
             if(res < 0){
                 fprintf(stderr, "Error writing to serial port");
+                fclose(tx_stats);
                 return -1;
             }
-            printf("%d bytes written\n", res);
+            writeEventToFile(tx_stats, &tx_now, "Sending SET command again\n");
+
+            //printf("%d bytes written\n", res);
             timeoutCount++;
+            stat_timeOutsCount++; //total number of timeouts
             timeoutFlag = 0;
         }
     }    
+
+    writeEventToFile(tx_stats, &tx_now, "Failed to establish connection\n");
+    fclose(tx_stats);
 
     return -1;
 }
@@ -110,21 +143,29 @@ u_int8_t *prepareInfoFrame(u_int8_t *buf, int bufSize, int *outputSize, u_int8_t
 }
 
 int llwrite(char *buf, int bufSize){
+    fputc((int)'\n', tx_stats);
+    writeEventToFile(tx_stats, &tx_now, "llwrite() called\n");
     if(buf == NULL || bufSize > MAX_PAYLOAD_SIZE)
         return -1;
 
     int frameSize = 0;
     u_int8_t *frame = prepareInfoFrame((u_int8_t*) buf, bufSize, &frameSize, tx_currSeqNumber);
     
-    DEBUG_PRINT("[llopen() start] SEQ NUMBER: %d\n", tx_currSeqNumber);
+    //DEBUG_PRINT("[llopen() start] SEQ NUMBER: %d\n", tx_currSeqNumber);
     // Write for the first time
     int res = write(tx_fd, frame, frameSize);
     if(res < 0){
-        fprintf(stderr, "error writing to serial port");
+        writeEventToFile(tx_stats, &tx_now, "Error writing to serial port\n");
+        //fprintf(stderr, "error writing to serial port");
         free(frame);
         return -1;
     }
-    printf("%d bytes written\n", res);
+    stat_txIFrames++;
+
+    writeEventToFile(tx_stats, &tx_now, "Written ");
+    fprintf(tx_stats, "%d bytes to serial port\n", res);
+    
+    //printf("%d bytes written\n", res);
 
     u_int8_t control;
 
@@ -140,21 +181,33 @@ int llwrite(char *buf, int bufSize){
         //read the incoming frame control field
         control = readControlField(tx_fd, 5);
 
+        #ifdef test_missing_su_frame
+        {
+            if(rand() % 4 == 0)
+                control = 0x03; // Simulate dropped packet
+        }
+        #endif
+
         //Check if the header and the sequence number are valid
         if(control == C_RR(!tx_currSeqNumber)){ //Receive receipt
-            printf("transmission successful\n");
+            writeEventToFile(tx_stats, &tx_now, "Received RR\n");
             tx_currSeqNumber = !tx_currSeqNumber;
 
             (void) signal(SIGALRM, SIG_IGN); //disable signal handler
             return bufSize;
         }
         else if(control == C_REJ(tx_currSeqNumber)){ //REJ
+            stat_txRejCount++;
             res = write(tx_fd, frame, frameSize);
             if(res < 0){
                 free(frame);
                 return -1;
             }
-            printf("%d bytes written\n", res);
+            writeEventToFile(tx_stats, &tx_now, "(Retransmission) Written ");
+            fprintf(tx_stats, "%d bytes to serial port\n", res);
+
+            stat_retransmittionCount++;
+            //printf("%d bytes written\n", res);
 
             timeoutCount = 0;
 
@@ -166,8 +219,13 @@ int llwrite(char *buf, int bufSize){
             if(res < 0){
                 return -1;
             }
-            printf("%d bytes written\n", res);
+            writeEventToFile(tx_stats, &tx_now, "(Retransmission) Written ");
+            fprintf(tx_stats, "%d bytes to serial port\n", res);
+
+            stat_retransmittionCount++;
+            //printf("%d bytes written\n", res);
             timeoutCount++;
+            stat_timeOutsCount++;
             timeoutFlag = 0;
         }
     }
@@ -177,6 +235,8 @@ int llwrite(char *buf, int bufSize){
 }
 
 int transmitter_llclose(int showStatistics){
+    fputc((int)'\n', tx_stats);
+    writeEventToFile(tx_stats, &tx_now, "llclose() called\n");
 
     // DISC frame header
     u_int8_t cmdDisc[] = {FLAG, A_tx, C_DISC, A_tx ^ C_DISC, FLAG};
@@ -187,9 +247,12 @@ int transmitter_llclose(int showStatistics){
 
     int res = write(tx_fd, cmdDisc, 5);
     if(res < 0){
-        fprintf(stderr, "Error writing to serial port");
+        writeEventToFile(tx_stats, &tx_now, "Error writing to serial port\n");
+        fclose(tx_stats);
+        //fprintf(stderr, "Error writing to serial port");
         return -1;
     }
+    writeEventToFile(tx_stats, &tx_now, "Sent SET\n");
     DEBUG_PRINT("Disconnect command sent\n");
 
     int timeoutCount = 0;
@@ -205,43 +268,71 @@ int transmitter_llclose(int showStatistics){
         res = checkHeader(tx_fd, cmdDisc, 5);
 
         if(res < 0){
-            fprintf(stderr, "Error reading from serial port");
+            writeEventToFile(tx_stats, &tx_now, "Error writing to serial port\n");
+            fclose(tx_stats);
+            //fprintf(stderr, "Error reading from serial port");
             return -1;
         }
         else if(res > 0){ //Success
             signal(SIGALRM, SIG_IGN); //disable interrupt handler
-            DEBUG_PRINT("Received Disconnection confirm, sending UA\n");
+            writeEventToFile(tx_stats, &tx_now, "Received DISC, sending UA\n");
+            //DEBUG_PRINT("Received Disconnection confirm, sending UA\n");
             break;
         }
 
         if(timeoutFlag){
             res = write(tx_fd, cmdDisc, 5);
             if(res < 0){
-                fprintf(stderr, "Error writing to serial port");
+                writeEventToFile(tx_stats, &tx_now, "Error writing to serial port\n");
+                fclose(tx_stats);
                 return -1;
             }
-            DEBUG_PRINT("Disconnect command sent again\n");
+
+            writeEventToFile(tx_stats, &tx_now, "DISC command sent again\n");
+            //DEBUG_PRINT("Disconnect command sent again\n");
             timeoutCount++;
+            stat_timeOutsCount++;
         }
     }
 
     if(write(tx_fd, cmdUA, 5) < 0){
-        fprintf(stderr, "Error writing to serial port");
+        writeEventToFile(tx_stats, &tx_now, "Error writing to serial port\n");
+        fclose(tx_stats);
+        //fprintf(stderr, "Error writing to serial port");
         return -1;
     }
-    DEBUG_PRINT("UA control sent\n");
+    writeEventToFile(tx_stats, &tx_now, "UA control sent\n");
+    //DEBUG_PRINT("UA control sent\n");
 
     sleep(1);
 
     free(tx_connectionParameters);
     closeSerialterminal(tx_fd);
 
+    fclose(tx_stats);
+
+    if(showStatistics){
+        printf("LINK LAYER STATISTICS\n");
+        printf("# of I frames sent: %d\n", stat_txIFrames);
+        printf("# of total connection timeouts: %d\n", stat_timeOutsCount);
+        printf("# of REJ frames received: %d\n", stat_txRejCount);
+        printf("# of retransmitted frames: %d\n", stat_retransmittionCount);
+        
+        printf("Press any key to open up event log\n");
+        getchar();
+
+        char command[100] = "less ";
+        strcat(command, tx_event_fileName);
+
+        system(command);
+    }
+
     return 1;
 }
 
 u_int8_t *byteStuffing(u_int8_t *data, int dataSize, int *outputDataSize){
     if(data == NULL || outputDataSize == NULL){
-        fprintf(stderr, "one or more parameters are invalid\n");
+        //fprintf(stderr, "one or more parameters are invalid\n");
         return NULL;
     }
 
@@ -281,7 +372,8 @@ u_int8_t *byteStuffing(u_int8_t *data, int dataSize, int *outputDataSize){
 }
 
 void timeOut(){
-    printf("Connection timeout\n");
+    writeEventToFile(tx_stats, &tx_now, "Connection timeout\n");
+    //printf("Connection timeout\n");
     timeoutFlag = 1;    //indicate there was a timeout
     timerFlag = 1;      //restart the timer 
 }
