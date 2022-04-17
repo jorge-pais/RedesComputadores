@@ -5,6 +5,13 @@ Globally declared serial terminal file descriptor
 and linklayer connection parameters
 */
 static int tx_fd;
+
+//ERROR COUNTERS
+int txRejCount = 0;
+int txIFrames = 0;
+int timeOutsCount = 0; //different from timeoutCount
+int retransmittionCount = 0;
+
 linkLayer *tx_connectionParameters;
 
 static u_int8_t tx_currSeqNumber = 0; // Ns = 0, 1
@@ -58,6 +65,7 @@ int transmitter_llopen(linkLayer connectionParameters){
             }
             printf("%d bytes written\n", res);
             timeoutCount++;
+            timeOutsCount++; //total number of timeouts
             timeoutFlag = 0;
         }
     }    
@@ -124,6 +132,7 @@ int llwrite(char *buf, int bufSize){
         free(frame);
         return -1;
     }
+    txIFrames++;
     printf("%d bytes written\n", res);
 
     u_int8_t control;
@@ -149,11 +158,13 @@ int llwrite(char *buf, int bufSize){
             return bufSize;
         }
         else if(control == C_REJ(tx_currSeqNumber)){ //REJ
+            txRejCount++;
             res = write(tx_fd, frame, frameSize);
             if(res < 0){
                 free(frame);
                 return -1;
             }
+            retransmittionCount++;
             printf("%d bytes written\n", res);
 
             timeoutCount = 0;
@@ -166,8 +177,10 @@ int llwrite(char *buf, int bufSize){
             if(res < 0){
                 return -1;
             }
+            retransmittionCount++;
             printf("%d bytes written\n", res);
             timeoutCount++;
+            timeOutsCount++;
             timeoutFlag = 0;
         }
     }
@@ -222,6 +235,7 @@ int transmitter_llclose(int showStatistics){
             }
             DEBUG_PRINT("Disconnect command sent again\n");
             timeoutCount++;
+            timeOutsCount++;
         }
     }
 
