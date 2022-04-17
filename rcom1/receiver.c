@@ -29,9 +29,10 @@ int receiver_llopen(linkLayer connectionParameters){
 
     // open event log file
     rx_stats = fopen(rx_event_fileName, "w");
-    if(rx_stats == NULL)
+    if(rx_stats == NULL){
         writeEventToFile(rx_stats, &rx_now, "Error during receiver_llopen() function call\n");
         return -1;
+    }
 
     writeEventToFile(rx_stats, &rx_now, "llopen() called\n");
     
@@ -63,16 +64,18 @@ int llread(char *packet){
     fputc((int)'\n', rx_stats);
     writeEventToFile(rx_stats, &rx_now, "llread() called\n");
     //DEBUG_PRINT("[llopen() call] %d \n", rx_prevSeqNum);
-    if(packet == NULL)
+    if(packet == NULL){
         writeEventToFile(rx_stats, &rx_now, "Error during llread() - invalid parameter\n");
         return -1;
+    }
 
     u_int8_t *datafield = malloc(2*MAX_PAYLOAD_SIZE +3);
     u_int8_t *destuffedData;
 
-    if(datafield == NULL)
+    if(datafield == NULL){
         writeEventToFile(rx_stats, &rx_now, "Error during llread() - datafield memory allocation failed\n");
         return -1;
+    }
 
     //possible reply frames
     u_int8_t repRR[] = {FLAG, A_tx, C_RR(rx_prevSeqNum), (A_tx ^ C_RR(rx_prevSeqNum)), FLAG};
@@ -87,6 +90,7 @@ int llread(char *packet){
         if(res == 0xFF || res == C_DISC){
             writeEventToFile(rx_stats, &rx_now, "Error during llread() - Packet's control field invalid\n");
             return -1;
+        }
 
         else if(res != C(0) && res != C(1)){ // not an I frame
             writeEventToFile(rx_stats, &rx_now, "Didn't receive I frame\n");
@@ -102,16 +106,18 @@ int llread(char *packet){
             // Read stuffed data field, excluding FLAG
             i = 0;
             res = read(rx_fd, &rx_byte, 1);
-            if(res < 0)
-                writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not read stuffed data field\n");
+            if(res < 0){
+                writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not read from serial port\n");
                 return -1;
+            }
             do{
                 //DEBUG_PRINT("[llopen()] 0x%02x\n", rx_byte);
                 datafield[i++] = rx_byte;
                 res = read(rx_fd, &rx_byte, 1);
-                if(res < 0)
-                    writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not read stuffed data field\n");
+                if(res < 0){
+                    writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not read from serial port\n");
                     return -1;
+                }
             } while (rx_byte != FLAG);
             
             destuffedData = byteDestuffing(datafield, i, &destuffedDataSize);
@@ -132,7 +138,7 @@ int llread(char *packet){
                 //send RR
                 res = write(rx_fd, repRR, 5);
                 if(res < 0){
-                    writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not send RR\n");
+                    writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not write to serial port\n");
                     free(datafield);
                     free(destuffedData);
                     return -1;
@@ -150,7 +156,7 @@ int llread(char *packet){
                 stat_rxRejCount++;
 
                 if(res < 0){
-                    writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not send REJ\n");
+                    writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not write to serial port\n");
                     free(datafield);
                     return -1;
                 }
@@ -164,7 +170,7 @@ int llread(char *packet){
             u_int8_t repRR_rej[] = {FLAG, A_tx, C_RR(!rx_prevSeqNum), (A_tx ^ C_RR(!rx_prevSeqNum)), FLAG};
             res = write(rx_fd, repRR_rej, 5);
             if(res < 0){
-                writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not send RR\n");
+                writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not write to serial port\n");
                 free(datafield);
                 return -1;
             }
@@ -194,9 +200,10 @@ u_int8_t *byteDestuffing(u_int8_t *data, int dataSize, int *outputDataSize){
     }
     
     u_int8_t *destuffedData = malloc(dataSize);
-    if(destuffedData == NULL)
+    if(destuffedData == NULL){
         writeEventToFile(rx_stats, &rx_now, "Error during byteDestuffing() - destuffedData memory allocation failed\n");
         return NULL;
+    }
 
     int size = 0;
     for (int i = 0; i < dataSize; i++)
@@ -222,9 +229,10 @@ u_int8_t *byteDestuffing(u_int8_t *data, int dataSize, int *outputDataSize){
     
     if(size != dataSize){
         destuffedData = realloc(destuffedData, size);
-        if(destuffedData == NULL)
-            writeEventToFile(rx_stats, &rx_now, "Error during byteDestuffing() - destuffedData memory reallocation failed\n");
+        if(destuffedData == NULL){
+            writeEventToFile(rx_stats, &rx_now, "Error during byteDestuffing() - memory reallocation failed\n");
             return NULL;
+        }
     }
 
     *outputDataSize = size;

@@ -32,9 +32,10 @@ int transmitter_llopen(linkLayer connectionParameters){
 
     // open event log file
     tx_stats = fopen(tx_event_fileName, "w");
-    if(tx_stats == NULL)
+    if(tx_stats == NULL){
         writeEventToFile(tx_stats, &tx_now, "Error during transmitter_llopen() function call\n");
         return -1;
+    }
 
     writeEventToFile(tx_stats, &tx_now, "llopen() called\n");
 
@@ -101,15 +102,16 @@ int transmitter_llopen(linkLayer connectionParameters){
 }
 
 u_int8_t *prepareInfoFrame(u_int8_t *buf, int bufSize, int *outputSize, u_int8_t sequenceBit){
-    if(buf == NULL || bufSize <= 0 || bufSize > MAX_PAYLOAD_SIZE)
+    if(buf == NULL || bufSize <= 0 || bufSize > MAX_PAYLOAD_SIZE){
         writeEventToFile(tx_stats, &tx_now, "Error in prepareIntoForm() function call - invalid parameters\n");
         return NULL;
-
+    }
     // Prepare the frame data
     u_int8_t *data = malloc(bufSize + 1);
-    if(data == NULL)
+    if(data == NULL){
         writeEventToFile(tx_stats, &tx_now, "Error in prepareIntoForm() function call - data memory allocation failed\n");
         return NULL;
+    }
     
     for (int i = 0; i < bufSize; i++) // Copy the buffer
         data[i] = buf[i];
@@ -118,10 +120,10 @@ u_int8_t *prepareInfoFrame(u_int8_t *buf, int bufSize, int *outputSize, u_int8_t
 
     int stuffedSize = 0;
     u_int8_t *stuffedData = byteStuffing(data, bufSize+1, &stuffedSize);
-    if(stuffedData == NULL)
+    if(stuffedData == NULL){
         writeEventToFile(tx_stats, &tx_now, "Error in prepareIntoForm() function call - byte stuffing failed\n");
         return NULL;
-
+    }
     free(data);
 
     u_int8_t *outgoingData = malloc(stuffedSize + 5);
@@ -351,10 +353,11 @@ u_int8_t *byteStuffing(u_int8_t *data, int dataSize, int *outputDataSize){
     // Maximum possible stuffed data size is twice that of the input data array
     // We prevent having to reallocate memory during stuffing
     u_int8_t *stuffedData = malloc(2*dataSize); 
-    if(stuffedData == NULL)
+    if(stuffedData == NULL){
         writeEventToFile(tx_stats, &tx_now, "Error in byteStuffing() - stuffedData memory allocation failed\n");
         return NULL;
-    
+    }
+
     int size = 0;
 
     for (int i = 0; i < dataSize; i++){
@@ -377,9 +380,10 @@ u_int8_t *byteStuffing(u_int8_t *data, int dataSize, int *outputDataSize){
     // Trim the array in memory if needed
     if(size != 2*dataSize){
         stuffedData = realloc(stuffedData, size);
-        if(stuffedData == NULL)
+        if(stuffedData == NULL){
             writeEventToFile(tx_stats, &tx_now, "Error in byteStuffing() - stuffedData memory reallocation failed\n");
             return NULL;
+        }
     }
     *outputDataSize = size;
     return stuffedData;

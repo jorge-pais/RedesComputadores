@@ -25,9 +25,9 @@
     #define DEBUG_PRINT(str, ...)
 #endif
 
-//testing variables
-#define testing
+//testing controls - uncomment to use
+/* #define testing
 #define test_data_corruption
-#define test_missing_su_frame
+#define test_missing_su_frame */
 
 #endif
