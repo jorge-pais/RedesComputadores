@@ -11,3 +11,4 @@ rcom1/protocol/linklayer.o
 rcom1/protocol/receiver.o
 rcom1/protocol/transmitter.o
 rcom1/protocol/utils.o
+rcom1/.DS_Store

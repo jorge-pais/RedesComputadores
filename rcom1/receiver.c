@@ -185,12 +185,20 @@ int llread(char *packet){
 
             BCC2 = generateBCC(destuffedData, destuffedDataSize - 1);
 
+            #ifdef test_data_corruption
+            {
+            if(rand() % 4 == 2)
+                BCC2++;
+            }
+            #endif
+
             if(destuffedData[destuffedDataSize-1] == BCC2){
                 DEBUG_PRINT("BCC2 CHECKS OUT\n");
                 //free(datafield);
                 //send RR
                 res = write(rx_fd, repRR, 5);
                 if(res < 0){
+                    free(datafield);
                     free(destuffedData);
                     return -1;
                 }
@@ -202,8 +210,10 @@ int llread(char *packet){
                 
                 free(destuffedData);
                 res = write(rx_fd, repREJ, 5);
-                if(res < 0)
+                if(res < 0){
+                    free(datafield);
                     return -1;
+                }
                 //continue;
             }
         }
@@ -211,8 +221,10 @@ int llread(char *packet){
             DEBUG_PRINT("DUPLICATE FRAME\n");
             u_int8_t repRR_rej[] = {FLAG, A_tx, C_RR(!rx_prevSeqNum), (A_tx ^ C_RR(!rx_prevSeqNum)), FLAG};
             res = write(rx_fd, repRR_rej, 5);
-            if(res < 0)
+            if(res < 0){
+                free(datafield);
                 return -1;
+            }
                 
             do{ //Dummy read, useless
                 res = read(rx_fd, &rx_byte, 1);
