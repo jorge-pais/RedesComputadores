@@ -5,16 +5,15 @@
 #include "linklayer.h"
 #include "definitions.h"
 
-/*  
-Globally declared termios structures, and serial terminal 
-file descriptor
-*/
-// static struct termios oldtio, newtio;
+// Time_t used for event log timestamp
+
 
 /*
 Configure serial port terminal I/O using linkLayer
 Return values:
     file descriptor id - If successful
+
+In case of error the whole program is terminated
 */
 int configureSerialterminal(linkLayer connectionParameters);
 
@@ -93,5 +92,14 @@ Return Values
     NULL - error
 */
 linkLayer *checkParameters(linkLayer link);
+
+/* 
+Write current time and a given string str to a file
+Used for logging of events
+
+Return values
+    1 - always
+*/
+int writeEventToFile(FILE *fd, time_t *_TIME, char *str);
 
 #endif

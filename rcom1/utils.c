@@ -69,8 +69,7 @@ int checkHeader(int fd, u_int8_t *cmd, int cmdLen){
     while(state < cmdLen){
         res = read(fd, &rx_byte, 1);
         if(res > 0) //Something was read
-            DEBUG;
-            //DEBUG_PRINT("[checkHeader()] received byte: 0x%02x -- state: %d \n", rx_byte, state);
+            DEBUG_PRINT("[checkHeader()] received byte: 0x%02x -- state: %d \n", rx_byte, state);
         else //Nothing has been read or some kind of error
             break;
         switch(state){ //State machine
@@ -130,7 +129,6 @@ u_int8_t readControlField(int fd, int cmdLen){
     while(state != cmdLen){
         res = read(fd, &rx_byte, 1);
         if(res > 0) //Something was read after 3 seconds
-            //DEBUG;
             DEBUG_PRINT("[readControlField()]received byte: 0x%02x -- state: %d \n", rx_byte, state);
         else //Nothing has been read or some kind of error
             break;
@@ -224,6 +222,16 @@ linkLayer *checkParameters(linkLayer link){
     strcpy(aux->serialPort, link.serialPort);
 
     return aux;
+}
+
+int writeEventToFile(FILE *fd, time_t *_TIME, char *str){
+    
+    time(_TIME);
+    struct tm *local = localtime(_TIME);
+    
+    fprintf(fd, "[%02d:%02d:%02d] %s", local->tm_hour, local->tm_min, local->tm_sec, str);
+
+    return 1;
 }
 
 speed_t convertBaudRate(int baud){

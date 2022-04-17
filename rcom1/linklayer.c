@@ -7,7 +7,7 @@ static int serialRole;
 
 int llopen(linkLayer connectionParameters){
     
-    #ifdef test_data_corruption
+    #ifdef testing
     {
     srand(time(NULL));
     }
