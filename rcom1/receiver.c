@@ -6,6 +6,11 @@ and linklayer parameters
 */
 static int rx_fd;
 
+//ERROR COUNTERS
+int rxRejCount = 0;
+int rxIFrames = 0;
+int duplicatesReceived = 0;
+
 linkLayer *rx_connectionParameters;
 
 /* // OLD llread() global variables
@@ -167,7 +172,7 @@ int llread(char *packet){
 
         if (currSeqNum == !rx_prevSeqNum){ //This is a new I frame
             DEBUG_PRINT("NEW I FRAME\n");
-            
+            rxIFrames++;
             // Read stuffed data field, excluding FLAG
             i = 0;
             res = read(rx_fd, &rx_byte, 1);
@@ -210,6 +215,9 @@ int llread(char *packet){
                 
                 free(destuffedData);
                 res = write(rx_fd, repREJ, 5);
+
+                rxRejCount++;
+
                 if(res < 0){
                     free(datafield);
                     return -1;
@@ -219,6 +227,7 @@ int llread(char *packet){
         }
         else{ //In case of duplicate I frame
             DEBUG_PRINT("DUPLICATE FRAME\n");
+            duplicatesReceived++;
             u_int8_t repRR_rej[] = {FLAG, A_tx, C_RR(!rx_prevSeqNum), (A_tx ^ C_RR(!rx_prevSeqNum)), FLAG};
             res = write(rx_fd, repRR_rej, 5);
             if(res < 0){
