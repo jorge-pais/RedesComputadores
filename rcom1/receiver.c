@@ -30,6 +30,7 @@ int receiver_llopen(linkLayer connectionParameters){
     // open event log file
     rx_stats = fopen(rx_event_fileName, "w");
     if(rx_stats == NULL)
+        writeEventToFile(rx_stats, &rx_now, "Error during receiver_llopen() function call\n");
         return -1;
 
     writeEventToFile(rx_stats, &rx_now, "llopen() called\n");
