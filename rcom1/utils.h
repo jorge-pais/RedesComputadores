@@ -5,9 +5,6 @@
 #include "linklayer.h"
 #include "definitions.h"
 
-// Time_t used for event log timestamp
-
-
 /*
 Configure serial port terminal I/O using linkLayer
 Return values:
