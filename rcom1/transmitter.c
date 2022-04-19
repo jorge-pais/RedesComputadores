@@ -191,7 +191,7 @@ int llwrite(char *buf, int bufSize){
 
         #ifdef test_missing_su_frame
         {
-            if(rand() % 4 == 0)
+            if(rand() % test_missing_su_frame == 0)
                 control = 0x03; // Simulate dropped packet
         }
         #endif
@@ -202,10 +202,10 @@ int llwrite(char *buf, int bufSize){
             tx_currSeqNumber = !tx_currSeqNumber;
 
             (void) signal(SIGALRM, SIG_IGN); //disable signal handler
+            free(frame);
             return bufSize;
         }
         else if(control == C_REJ(tx_currSeqNumber)){ //REJ
-            stat_txRejCount++;
             res = write(tx_fd, frame, frameSize);
             if(res < 0){
                 writeEventToFile(tx_stats, &tx_now, "Frame retransmission failed\n");
@@ -215,6 +215,7 @@ int llwrite(char *buf, int bufSize){
             writeEventToFile(tx_stats, &tx_now, "(Retransmission) Written ");
             fprintf(tx_stats, "%d bytes to serial port\n", res);
 
+            stat_txRejCount++;
             stat_txIFrames++;
             stat_retransmittionCount++;
             //printf("%d bytes written\n", res);
@@ -228,6 +229,7 @@ int llwrite(char *buf, int bufSize){
             res = write(tx_fd, frame, frameSize);
             if(res < 0){
                 writeEventToFile(tx_stats, &tx_now, "Frame retransmission failed\n");
+                free(frame);
                 return -1;
             }
             writeEventToFile(tx_stats, &tx_now, "(Retransmission) Written ");
@@ -317,27 +319,27 @@ int transmitter_llclose(int showStatistics){
     writeEventToFile(tx_stats, &tx_now, "UA control sent\n");
     //DEBUG_PRINT("UA control sent\n");
 
-    sleep(1);
-
     free(tx_connectionParameters);
     closeSerialterminal(tx_fd);
 
     fclose(tx_stats);
 
     if(showStatistics){
-        printf("LINK LAYER STATISTICS\n");
+        printf("\n######## LINK LAYER STATISTICS ########\n");
         printf("# of I frames sent: %d\n", stat_txIFrames);
         printf("# of total connection timeouts: %d\n", stat_timeOutsCount);
         printf("# of REJ frames received: %d\n", stat_txRejCount);
         printf("# of retransmitted frames: %d\n", stat_retransmittionCount);
         
-        printf("Press any key to open up event log\n");
-        getchar();
+        printf("Open event log using less? [y/n]\n");
+        res = getchar();
 
-        char command[100] = "less ";
-        strcat(command, tx_event_fileName);
+        if(res == 'y'){
+            char command[100] = "less ";
+            strcat(command, tx_event_fileName);
 
-        system(command);
+            system(command);
+        }
     }
 
     return 1;

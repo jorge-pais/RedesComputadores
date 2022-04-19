@@ -69,7 +69,7 @@ int llread(char *packet){
         return -1;
     }
 
-    u_int8_t *datafield = malloc(2*MAX_PAYLOAD_SIZE +3);
+    u_int8_t *datafield = malloc(2*MAX_PAYLOAD_SIZE + 3);
     u_int8_t *destuffedData;
 
     if(datafield == NULL){
@@ -101,21 +101,22 @@ int llread(char *packet){
 
         if (currSeqNum == !rx_prevSeqNum){ //This is a new I frame
             writeEventToFile(rx_stats, &rx_now, "New I frame received\n");
-            //DEBUG_PRINT("NEW I FRAME\n");
             stat_rxIFrames++;
+
             // Read stuffed data field, excluding FLAG
             i = 0;
             res = read(rx_fd, &rx_byte, 1);
             if(res < 0){
                 writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not read from serial port\n");
+                free(datafield);
                 return -1;
             }
             do{
-                //DEBUG_PRINT("[llopen()] 0x%02x\n", rx_byte);
                 datafield[i++] = rx_byte;
                 res = read(rx_fd, &rx_byte, 1);
                 if(res < 0){
                     writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not read from serial port\n");
+                    free(datafield);
                     return -1;
                 }
             } while (rx_byte != FLAG);
@@ -126,15 +127,15 @@ int llread(char *packet){
 
             #ifdef test_data_corruption
             {
-            if(rand() % 4 == 0)
+            if(rand() % test_data_corruption == 0)
                 BCC2++;
             }
             #endif
 
             if(destuffedData[destuffedDataSize-1] == BCC2){
                 writeEventToFile(rx_stats, &rx_now, "BCC2 check passed, sending RR\n");
-                //DEBUG_PRINT("BCC2 CHECKS OUT\n");
                 //free(datafield);
+                
                 //send RR
                 res = write(rx_fd, repRR, 5);
                 if(res < 0){
@@ -148,7 +149,6 @@ int llread(char *packet){
             }
             else{
                 writeEventToFile(rx_stats, &rx_now, "BCC2 check failed, sending REJ\n");
-                //DEBUG_PRINT("WRONG BCC2\n");
                 
                 free(destuffedData);
                 res = write(rx_fd, repREJ, 5);
@@ -165,8 +165,8 @@ int llread(char *packet){
         }
         else{ //In case of duplicate I frame
             writeEventToFile(rx_stats, &rx_now, "Duplicate frame received, sending RR\n");
-            //DEBUG_PRINT("DUPLICATE FRAME\n");
             stat_duplicatesReceived++;
+
             u_int8_t repRR_rej[] = {FLAG, A_tx, C_RR(!rx_prevSeqNum), (A_tx ^ C_RR(!rx_prevSeqNum)), FLAG};
             res = write(rx_fd, repRR_rej, 5);
             if(res < 0){
@@ -182,7 +182,6 @@ int llread(char *packet){
     }
 
     writeEventToFile(rx_stats, &rx_now, "Writing read data to packet\n");
-    //DEBUG_PRINT("WRITE DATA FRAME TO PACKET\n");
     for (int i = 0; i < destuffedDataSize; i++)
         packet[i] = destuffedData[i];
 
@@ -278,18 +277,20 @@ int receiver_llclose(int showStatistics){
     fclose(rx_stats);
 
     if(showStatistics){
-        printf("LINK LAYER STATISTICS\n");
+        printf("\n######## LINK LAYER STATISTICS ########\n");
         printf("# of I frames received: %d \n", stat_rxIFrames);
         printf("# of REJ frames sent: %d \n", stat_rxRejCount);
         printf("# of duplicate frames received: %d \n", stat_duplicatesReceived);
         
-        printf("Press enter to open up event log\n");
-        getchar();
+        printf("Open event log using less? [y/n]\n");
+        res = getchar();
 
-        char command[100] = "less ";
-        strcat(command, rx_event_fileName);
+        if(res=='y'){ //Open file using less
+            char command[100] = "less ";
+            strcat(command, rx_event_fileName);
 
-        system(command);
+            system(command);
+        }
     }
 
     return 1;
