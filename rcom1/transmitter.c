@@ -325,7 +325,7 @@ int transmitter_llclose(int showStatistics){
     fclose(tx_stats);
 
     if(showStatistics){
-        printf("######## LINK LAYER STATISTICS\n");
+        printf("\n######## LINK LAYER STATISTICS ########\n");
         printf("# of I frames sent: %d\n", stat_txIFrames);
         printf("# of total connection timeouts: %d\n", stat_timeOutsCount);
         printf("# of REJ frames received: %d\n", stat_txRejCount);

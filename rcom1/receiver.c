@@ -277,7 +277,7 @@ int receiver_llclose(int showStatistics){
     fclose(rx_stats);
 
     if(showStatistics){
-        printf("LINK LAYER STATISTICS\n");
+        printf("\n######## LINK LAYER STATISTICS ########\n");
         printf("# of I frames received: %d \n", stat_rxIFrames);
         printf("# of REJ frames sent: %d \n", stat_rxRejCount);
         printf("# of duplicate frames received: %d \n", stat_duplicatesReceived);
