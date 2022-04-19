@@ -30,7 +30,7 @@ int receiver_llopen(linkLayer connectionParameters){
     // open event log file
     rx_stats = fopen(rx_event_fileName, "w");
     if(rx_stats == NULL){
-        writeEventToFile(rx_stats, &rx_now, "Error during receiver_llopen() function call\n");
+        writeEventToFile(rx_stats, &rx_now, "Error opening statistics file\n");
         return -1;
     }
 
@@ -41,7 +41,6 @@ int receiver_llopen(linkLayer connectionParameters){
 
     if(checkHeader(rx_fd, cmdSET, 5) <= 0){
         writeEventToFile(rx_stats, &rx_now, "Haven't received SET\n");
-        //fprintf(stderr, "Haven't received SET\n");
         return -1;
     }
     writeEventToFile(rx_stats, &rx_now, "Received SET, sending UA\n");
@@ -52,7 +51,6 @@ int receiver_llopen(linkLayer connectionParameters){
 
     if(write(rx_fd, repUA, 5) < 0){
         writeEventToFile(rx_stats, &rx_now, "Error writing to serial port\n");
-        //fprintf(stderr, "Error writing to serial port");
         return -1;
     }
 
@@ -65,7 +63,7 @@ int llread(char *packet){
     writeEventToFile(rx_stats, &rx_now, "llread() called\n");
     //DEBUG_PRINT("[llopen() call] %d \n", rx_prevSeqNum);
     if(packet == NULL){
-        writeEventToFile(rx_stats, &rx_now, "Error during llread() - invalid parameter\n");
+        writeEventToFile(rx_stats, &rx_now, "invalid parameters\n");
         return -1;
     }
 
@@ -73,7 +71,7 @@ int llread(char *packet){
     u_int8_t *destuffedData;
 
     if(datafield == NULL){
-        writeEventToFile(rx_stats, &rx_now, "Error during llread() - datafield memory allocation failed\n");
+        writeEventToFile(rx_stats, &rx_now, "Memory allocation failed\n");
         return -1;
     }
 
@@ -88,7 +86,7 @@ int llread(char *packet){
     while(!STOP){
         res = readControlField(rx_fd, 4);
         if(res == 0xFF || res == C_DISC){
-            writeEventToFile(rx_stats, &rx_now, "Error during llread() - Packet's control field invalid\n");
+            writeEventToFile(rx_stats, &rx_now, "Error while reading frame header or DISC received \n");
             return -1;
         }
 
@@ -107,7 +105,7 @@ int llread(char *packet){
             i = 0;
             res = read(rx_fd, &rx_byte, 1);
             if(res < 0){
-                writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not read from serial port\n");
+                writeEventToFile(rx_stats, &rx_now, "Could not read from serial port\n");
                 free(datafield);
                 return -1;
             }
@@ -115,7 +113,7 @@ int llread(char *packet){
                 datafield[i++] = rx_byte;
                 res = read(rx_fd, &rx_byte, 1);
                 if(res < 0){
-                    writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not read from serial port\n");
+                    writeEventToFile(rx_stats, &rx_now, "Could not read from serial port\n");
                     free(datafield);
                     return -1;
                 }
@@ -139,7 +137,7 @@ int llread(char *packet){
                 //send RR
                 res = write(rx_fd, repRR, 5);
                 if(res < 0){
-                    writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not write to serial port\n");
+                    writeEventToFile(rx_stats, &rx_now, "Could not write to serial port\n");
                     free(datafield);
                     free(destuffedData);
                     return -1;
@@ -156,7 +154,7 @@ int llread(char *packet){
                 stat_rxRejCount++;
 
                 if(res < 0){
-                    writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not write to serial port\n");
+                    writeEventToFile(rx_stats, &rx_now, "Could not write to serial port\n");
                     free(datafield);
                     return -1;
                 }
@@ -170,14 +168,14 @@ int llread(char *packet){
             u_int8_t repRR_rej[] = {FLAG, A_tx, C_RR(!rx_prevSeqNum), (A_tx ^ C_RR(!rx_prevSeqNum)), FLAG};
             res = write(rx_fd, repRR_rej, 5);
             if(res < 0){
-                writeEventToFile(rx_stats, &rx_now, "Error during llread() - could not write to serial port\n");
+                writeEventToFile(rx_stats, &rx_now, "Could not write to serial port\n");
                 free(datafield);
                 return -1;
             }
                 
-            do{ //Dummy read, useless
+            do{ //Dummy read
                 res = read(rx_fd, &rx_byte, 1);
-            } while (rx_byte != FLAG || res == 0);
+            } while (rx_byte != FLAG || res != 0);
         }
     }
 
@@ -193,14 +191,13 @@ int llread(char *packet){
 
 u_int8_t *byteDestuffing(u_int8_t *data, int dataSize, int *outputDataSize){
     if(data == NULL || outputDataSize == NULL){
-        writeEventToFile(rx_stats, &rx_now, "Error during byteDestuffing() - invalid parameters in function call\n");
-        //fprintf(stderr, "invalid parameters in function call");
+        writeEventToFile(rx_stats, &rx_now, "byteDestuffing() - invalid parameters in function call\n");
         return NULL;
     }
     
     u_int8_t *destuffedData = malloc(dataSize);
     if(destuffedData == NULL){
-        writeEventToFile(rx_stats, &rx_now, "Error during byteDestuffing() - destuffedData memory allocation failed\n");
+        writeEventToFile(rx_stats, &rx_now, "byteDestuffing() - destuffedData memory allocation failed\n");
         return NULL;
     }
 
@@ -220,7 +217,7 @@ u_int8_t *byteDestuffing(u_int8_t *data, int dataSize, int *outputDataSize){
                 break;
             default: //invalid escape character use
                 free(destuffedData);
-                writeEventToFile(rx_stats, &rx_now, "Error during byteDestuffing() - invalid invalid escape character used\n");
+                writeEventToFile(rx_stats, &rx_now, "byteDestuffing() - invalid invalid escape follow-up character used\n");
                 return NULL;
                 break;
             }
@@ -229,7 +226,7 @@ u_int8_t *byteDestuffing(u_int8_t *data, int dataSize, int *outputDataSize){
     if(size != dataSize){
         destuffedData = realloc(destuffedData, size);
         if(destuffedData == NULL){
-            writeEventToFile(rx_stats, &rx_now, "Error during byteDestuffing() - memory reallocation failed\n");
+            writeEventToFile(rx_stats, &rx_now, "byteDestuffing() - memory reallocation failed\n");
             return NULL;
         }
     }
@@ -249,7 +246,6 @@ int receiver_llclose(int showStatistics){
 
     if(checkHeader(rx_fd, cmdDisc, 5) < 0){
         writeEventToFile(rx_stats, &rx_now, "Error reading from serial port\n");
-        //fprintf(stderr, "Error reading from serial port");
         return -1;
     }
 
@@ -259,14 +255,12 @@ int receiver_llclose(int showStatistics){
     int res = write(rx_fd, cmdDisc, 5);
     if(res < 0){
         writeEventToFile(rx_stats, &rx_now, "Error writing to serial port\n");
-        //fprintf(stderr, "Error writing to serial port");
         return -1;
     }
     DEBUG_PRINT("DISC sent back\n");
 
     if(checkHeader(rx_fd, cmdUA, 5) < 0){
         writeEventToFile(rx_stats, &rx_now, "Error reading from serial port\n");
-        //fprintf(stderr, "Error reading from serial port");
         return -1;
     }
 
