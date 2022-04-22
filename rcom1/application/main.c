@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
 					break;
 				}
 				printf("read from file -> write to link layer, %d\n", bytes_read);
-				printf("llwrite() took %ld ms\n", (end.tv_nsec - start.tv_nsec)/1000000);
+				printf("llwrite() took %ld ms\n", (end.tv_sec-start.tv_sec)*1000 + (end.tv_nsec - start.tv_nsec)/1000000);
 			}
 			else if (bytes_read == 0) {
 				// stop receiver
@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
 				break;
 			}
 
-			sleep(1);
+			usleep(100); //0.1ms
 		}
 		// close connection
 		llclose(1);
@@ -146,7 +146,7 @@ int main(int argc, char *argv[]) {
 					}
 					total_bytes = total_bytes + write_result;
 					printf("read from link layer -> write to file, %d %d %d\n", bytes_read, write_result, total_bytes);
-					printf("llread() took %ld ms\n", (end.tv_sec - start.tv_sec)/1000000);
+					printf("llread() took %ld ms\n", (end.tv_sec-start.tv_sec)*1000 + (end.tv_nsec - start.tv_nsec)/1000000);
 
 				}
 				else if (buffer[0] == 0) {
