@@ -4,7 +4,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
+#include <time.h>
+#include <unistd.h>
 
 /*
  * $1 /dev/ttySxx
@@ -18,6 +19,9 @@ int main(int argc, char *argv[]) {
 		printf("usage: progname /dev/ttySxx tx|rx filename\n");
 		exit(1);
 	}
+
+	struct timespec start, end;
+	
 
 	printf("%s %s %s\n", argv[1], argv[2], argv[3]);
 	fflush(stdout);	
@@ -66,17 +70,22 @@ int main(int argc, char *argv[]) {
 			else if (bytes_read > 0) {
 				// continue sending data
 				buffer[0] = 1;
-				write_result = llwrite(buffer, bytes_read+1);
+				//time llwrite()
+				clock_gettime(CLOCK_REALTIME, &start);
+				write_result = llwrite((char*)buffer, bytes_read+1);
+				clock_gettime(CLOCK_REALTIME, &end);
+
 				if(write_result < 0) {
 					fprintf(stderr, "Error sending data to link layer\n");
 					break;
 				}
 				printf("read from file -> write to link layer, %d\n", bytes_read);
+				printf("llwrite() took %ld ms\n", (end.tv_nsec - start.tv_nsec)/1000000);
 			}
 			else if (bytes_read == 0) {
 				// stop receiver
 				buffer[0] = 0;
-				llwrite(buffer, 1);
+				llwrite((char*)buffer, 1);
 				printf("App layer: done reading and sending file\n");
 				break;
 			}
@@ -120,7 +129,10 @@ int main(int argc, char *argv[]) {
 		int total_bytes = 0;
 
 		while (bytes_read >= 0){
-			bytes_read = llread(buffer);
+			clock_gettime(CLOCK_REALTIME, &start);
+			bytes_read = llread((char*)buffer);
+			clock_gettime(CLOCK_REALTIME, &end);
+
 			if(bytes_read < 0) {
 				fprintf(stderr, "Error receiving from link layer\n");
 				break;
@@ -134,6 +146,8 @@ int main(int argc, char *argv[]) {
 					}
 					total_bytes = total_bytes + write_result;
 					printf("read from link layer -> write to file, %d %d %d\n", bytes_read, write_result, total_bytes);
+					printf("llread() took %ld ms\n", (end.tv_sec - start.tv_sec)/1000000);
+
 				}
 				else if (buffer[0] == 0) {
 					printf("App layer: done receiving file\n");
