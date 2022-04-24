@@ -14,3 +14,6 @@ rcom1/protocol/utils.o
 rcom1/.DS_Store
 rcom1/application/rx_statistics
 rcom1/application/tx_statistics
+rcom1/application/rx_penguim.gif
+rcom1/penguim.gif
+rcom1/penguim.raw

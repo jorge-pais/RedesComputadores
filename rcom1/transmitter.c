@@ -32,9 +32,10 @@ int transmitter_llopen(linkLayer connectionParameters){
 
     // open event log file
     tx_stats = fopen(tx_event_fileName, "w");
-    if(tx_stats == NULL)
-        writeEventToFile(tx_stats, &tx_now, "Error during transmitter_llopen() function call\n");
+    if(tx_stats == NULL){
+        writeEventToFile(tx_stats, &tx_now, "Error opening statistics file\n");
         return -1;
+    }
 
     writeEventToFile(tx_stats, &tx_now, "llopen() called\n");
 
@@ -49,7 +50,6 @@ int transmitter_llopen(linkLayer connectionParameters){
     if(res < 0){
         writeEventToFile(tx_stats, &tx_now, "Error writing to serial port\n");
         fclose(tx_stats);
-        //fprintf(stderr, "Error writing to serial port");
         return -1;
     }
     writeEventToFile(tx_stats, &tx_now, "Sending SET command\n");
@@ -67,27 +67,23 @@ int transmitter_llopen(linkLayer connectionParameters){
 
         if(readResult < 0){
             writeEventToFile(tx_stats, &tx_now, "Error reading command from serial port\n");
-            //fprintf(stderr, "Error reading command from serial port");
             return -1;
         }
         else if(readResult > 0){ //Success
             writeEventToFile(tx_stats, &tx_now, "Connection established\n");
             signal(SIGALRM, SIG_IGN); //disable interrupt handler
-            //printf("Received UA, connection established\n");
             return 1;
         }
 
         if(timeoutFlag){
             int res = write(tx_fd, cmdSet, 5);
             if(res < 0){
-                //fprintf(stderr, "Error writing to serial port");
                 writeEventToFile(tx_stats, &tx_now, "Error writing to serial port\n");
                 fclose(tx_stats);
                 return -1;
             }
             writeEventToFile(tx_stats, &tx_now, "Sending SET command again\n");
 
-            //printf("%d bytes written\n", res);
             timeoutCount++;
             stat_timeOutsCount++; //total number of timeouts
             timeoutFlag = 0;
@@ -101,15 +97,16 @@ int transmitter_llopen(linkLayer connectionParameters){
 }
 
 u_int8_t *prepareInfoFrame(u_int8_t *buf, int bufSize, int *outputSize, u_int8_t sequenceBit){
-    if(buf == NULL || bufSize <= 0 || bufSize > MAX_PAYLOAD_SIZE)
-        writeEventToFile(tx_stats, &tx_now, "Error in prepareIntoForm() function call - invalid parameters\n");
+    if(buf == NULL || bufSize <= 0 || bufSize > MAX_PAYLOAD_SIZE){
+        writeEventToFile(tx_stats, &tx_now, "prepareIntoForm() - invalid parameters\n");
         return NULL;
-
+    }
     // Prepare the frame data
     u_int8_t *data = malloc(bufSize + 1);
-    if(data == NULL)
-        writeEventToFile(tx_stats, &tx_now, "Error in prepareIntoForm() function call - data memory allocation failed\n");
+    if(data == NULL){
+        writeEventToFile(tx_stats, &tx_now, "prepareIntoForm() - data memory allocation failed\n");
         return NULL;
+    }
     
     for (int i = 0; i < bufSize; i++) // Copy the buffer
         data[i] = buf[i];
@@ -118,15 +115,15 @@ u_int8_t *prepareInfoFrame(u_int8_t *buf, int bufSize, int *outputSize, u_int8_t
 
     int stuffedSize = 0;
     u_int8_t *stuffedData = byteStuffing(data, bufSize+1, &stuffedSize);
-    if(stuffedData == NULL)
-        writeEventToFile(tx_stats, &tx_now, "Error in prepareIntoForm() function call - byte stuffing failed\n");
+    if(stuffedData == NULL){
+        writeEventToFile(tx_stats, &tx_now, "prepareIntoForm() - byte stuffing failed\n");
         return NULL;
-
+    }
     free(data);
 
     u_int8_t *outgoingData = malloc(stuffedSize + 5);
     if(outgoingData == NULL){
-        writeEventToFile(tx_stats, &tx_now, "Error in prepareIntoForm() function call - outgoingData memory allocation failed\n");
+        writeEventToFile(tx_stats, &tx_now, "prepareIntoForm() - outgoingData memory allocation failed\n");
         free(stuffedData);
         return NULL;
     }
@@ -158,11 +155,11 @@ int llwrite(char *buf, int bufSize){
     u_int8_t *frame = prepareInfoFrame((u_int8_t*) buf, bufSize, &frameSize, tx_currSeqNumber);
     
     //DEBUG_PRINT("[llopen() start] SEQ NUMBER: %d\n", tx_currSeqNumber);
+    
     // Write for the first time
     int res = write(tx_fd, frame, frameSize);
     if(res < 0){
         writeEventToFile(tx_stats, &tx_now, "Error writing to serial port\n");
-        //fprintf(stderr, "error writing to serial port");
         free(frame);
         return -1;
     }
@@ -171,8 +168,6 @@ int llwrite(char *buf, int bufSize){
     writeEventToFile(tx_stats, &tx_now, "Written ");
     fprintf(tx_stats, "%d bytes to serial port\n", res);
     
-    //printf("%d bytes written\n", res);
-
     u_int8_t control;
 
     (void) signal(SIGALRM, timeOut); // Set up signal handler
@@ -189,7 +184,7 @@ int llwrite(char *buf, int bufSize){
 
         #ifdef test_missing_su_frame
         {
-            if(rand() % 4 == 0)
+            if(rand() % test_missing_su_frame == 0)
                 control = 0x03; // Simulate dropped packet
         }
         #endif
@@ -200,10 +195,29 @@ int llwrite(char *buf, int bufSize){
             tx_currSeqNumber = !tx_currSeqNumber;
 
             (void) signal(SIGALRM, SIG_IGN); //disable signal handler
+            free(frame);
             return bufSize;
         }
         else if(control == C_REJ(tx_currSeqNumber)){ //REJ
+            res = write(tx_fd, frame, frameSize);
+            if(res < 0){
+                writeEventToFile(tx_stats, &tx_now, "Frame retransmission failed\n");
+                free(frame);
+                return -1;
+            }
+            writeEventToFile(tx_stats, &tx_now, "(Retransmission) Written ");
+            fprintf(tx_stats, "%d bytes to serial port\n", res);
+
             stat_txRejCount++;
+            stat_txIFrames++;
+            stat_retransmittionCount++;
+
+            timeoutCount = 0;
+
+            alarm(tx_connectionParameters->timeOut); // alarm reset
+        }
+
+        if(timeoutFlag){
             res = write(tx_fd, frame, frameSize);
             if(res < 0){
                 writeEventToFile(tx_stats, &tx_now, "Frame retransmission failed\n");
@@ -215,27 +229,8 @@ int llwrite(char *buf, int bufSize){
 
             stat_txIFrames++;
             stat_retransmittionCount++;
-            //printf("%d bytes written\n", res);
-
-            timeoutCount = 0;
-
-            alarm(tx_connectionParameters->timeOut); // alarm reset
-        }
-
-        if(timeoutFlag){
-            res = write(tx_fd, frame, frameSize);
-            if(res < 0){
-                writeEventToFile(tx_stats, &tx_now, "Frame retransmission failed\n");
-                return -1;
-            }
-            writeEventToFile(tx_stats, &tx_now, "(Retransmission) Written ");
-            fprintf(tx_stats, "%d bytes to serial port\n", res);
-
-            stat_txIFrames++;
-            stat_retransmittionCount++;
             stat_timeOutsCount++;
 
-            //printf("%d bytes written\n", res);
             timeoutCount++;
             timeoutFlag = 0;
         }
@@ -260,7 +255,6 @@ int transmitter_llclose(int showStatistics){
     if(res < 0){
         writeEventToFile(tx_stats, &tx_now, "Error writing to serial port\n");
         fclose(tx_stats);
-        //fprintf(stderr, "Error writing to serial port");
         return -1;
     }
     writeEventToFile(tx_stats, &tx_now, "Sent SET\n");
@@ -281,7 +275,6 @@ int transmitter_llclose(int showStatistics){
         if(res < 0){
             writeEventToFile(tx_stats, &tx_now, "Error writing to serial port\n");
             fclose(tx_stats);
-            //fprintf(stderr, "Error reading from serial port");
             return -1;
         }
         else if(res > 0){ //Success
@@ -309,13 +302,9 @@ int transmitter_llclose(int showStatistics){
     if(write(tx_fd, cmdUA, 5) < 0){
         writeEventToFile(tx_stats, &tx_now, "Error writing to serial port\n");
         fclose(tx_stats);
-        //fprintf(stderr, "Error writing to serial port");
         return -1;
     }
     writeEventToFile(tx_stats, &tx_now, "UA control sent\n");
-    //DEBUG_PRINT("UA control sent\n");
-
-    sleep(1);
 
     free(tx_connectionParameters);
     closeSerialterminal(tx_fd);
@@ -323,38 +312,40 @@ int transmitter_llclose(int showStatistics){
     fclose(tx_stats);
 
     if(showStatistics){
-        printf("LINK LAYER STATISTICS\n");
+        printf("\n######## LINK LAYER STATISTICS ########\n");
         printf("# of I frames sent: %d\n", stat_txIFrames);
         printf("# of total connection timeouts: %d\n", stat_timeOutsCount);
         printf("# of REJ frames received: %d\n", stat_txRejCount);
         printf("# of retransmitted frames: %d\n", stat_retransmittionCount);
         
-        printf("Press any key to open up event log\n");
-        getchar();
+        printf("Open event log using less? [y/n]\n");
+        res = getchar();
 
-        char command[100] = "less ";
-        strcat(command, tx_event_fileName);
+        if(res == 'y'){
+            char command[100] = "less ";
+            strcat(command, tx_event_fileName);
 
-        system(command);
+            system(command);
+        }
     }
 
     return 1;
 }
 
 u_int8_t *byteStuffing(u_int8_t *data, int dataSize, int *outputDataSize){
-    if(data == NULL || outputDataSize == NULL){
-        writeEventToFile(tx_stats, &tx_now, "Error in byteStuffing() - one or more parameters are invalid\n");
-        //fprintf(stderr, "one or more parameters are invalid\n");
+    if(data == NULL || outputDataSize == NULL || dataSize < 1){
+        writeEventToFile(tx_stats, &tx_now, "byteStuffing() - one or more parameters are invalid\n");
         return NULL;
     }
 
     // Maximum possible stuffed data size is twice that of the input data array
     // We prevent having to reallocate memory during stuffing
     u_int8_t *stuffedData = malloc(2*dataSize); 
-    if(stuffedData == NULL)
-        writeEventToFile(tx_stats, &tx_now, "Error in byteStuffing() - stuffedData memory allocation failed\n");
+    if(stuffedData == NULL){
+        writeEventToFile(tx_stats, &tx_now, "byteStuffing() - stuffedData memory allocation failed\n");
         return NULL;
-    
+    }
+
     int size = 0;
 
     for (int i = 0; i < dataSize; i++){
@@ -377,9 +368,10 @@ u_int8_t *byteStuffing(u_int8_t *data, int dataSize, int *outputDataSize){
     // Trim the array in memory if needed
     if(size != 2*dataSize){
         stuffedData = realloc(stuffedData, size);
-        if(stuffedData == NULL)
-            writeEventToFile(tx_stats, &tx_now, "Error in byteStuffing() - stuffedData memory reallocation failed\n");
+        if(stuffedData == NULL){
+            writeEventToFile(tx_stats, &tx_now, "byteStuffing() - stuffedData memory reallocation failed\n");
             return NULL;
+        }
     }
     *outputDataSize = size;
     return stuffedData;
