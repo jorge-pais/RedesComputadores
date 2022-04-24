@@ -7,7 +7,8 @@
 #include <time.h>
 #include <unistd.h>
 
-#define TRANSMISSION_TIME_ms 90
+#define TRANSMISSION_TIME_ms 45
+
 
 /*
  * $1 /dev/ttySxx
@@ -24,8 +25,6 @@ int main(int argc, char *argv[]) {
 
 	struct timespec start, end;
 	struct timespec progStart, progEnd;
-	
-	
 
 	printf("%s %s %s\n", argv[1], argv[2], argv[3]);
 	fflush(stdout);	

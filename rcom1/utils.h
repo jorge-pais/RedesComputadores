@@ -59,19 +59,6 @@ BAUDRATE_DEFAULT configured in linklayer.h
 speed_t convertBaudRate(int baud);
 
 /*
-Try to read a especific header for a given frame
-Works for Supervision and Unnumbered 
-Return values:
-    1   - the command was read successfully
-    0   - couldn´t read anything
-    -1  - error while reading
-
-Mudar nome da função maybe,
-Commands são o I, SET, DISC; Replies são o UA, RR, REJ
-*/
-int getCommand(int fd, unsigned char *cmd, int cmdLen);
-
-/*
 Calculate a Block Check Character for a given data vector
 
 Return Values
