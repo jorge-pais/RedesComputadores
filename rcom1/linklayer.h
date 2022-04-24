@@ -24,7 +24,6 @@ typedef struct linkLayer{
 #define TRANSMITTER 0
 #define RECEIVER 1
 
-
 //SIZE of maximum acceptable payload; maximum number of bytes that application layer should send to link layer
 #define MAX_PAYLOAD_SIZE 1000
 

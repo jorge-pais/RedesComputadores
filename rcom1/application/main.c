@@ -9,7 +9,6 @@
 
 #define TRANSMISSION_TIME_ms 45
 
-
 /*
  * $1 /dev/ttySxx
  * $2 tx | rx
