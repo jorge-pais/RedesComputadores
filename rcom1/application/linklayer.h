@@ -26,8 +26,9 @@ typedef struct linkLayer{
 
 
 //SIZE of maximum acceptable payload; maximum number of bytes that application layer should send to link layer
-#define MAX_PAYLOAD_SIZE 1000
-//CONNECTION deafault values
+#define MAX_PAYLOAD_SIZE 512
+
+//CONNECTION default values
 #define BAUDRATE_DEFAULT B38400
 #define MAX_RETRANSMISSIONS_DEFAULT 3
 #define TIMEOUT_DEFAULT 4
@@ -48,6 +49,3 @@ int llclose(int showStatistics);
 
 
 #endif
-
-
-

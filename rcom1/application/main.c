@@ -7,6 +7,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#define TRANSMISSION_TIME_ms 90
+
 /*
  * $1 /dev/ttySxx
  * $2 tx | rx
@@ -21,6 +23,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	struct timespec start, end;
+	struct timespec progStart, progEnd;
+	
 	
 
 	printf("%s %s %s\n", argv[1], argv[2], argv[3]);
@@ -35,14 +39,19 @@ int main(int argc, char *argv[]) {
 		struct linkLayer ll;
 		sprintf(ll.serialPort, "%s", argv[1]);
 		ll.role = 0;
-		ll.baudRate = 9600;
+		ll.baudRate = 2400;
 		ll.numTries = 3;
 		ll.timeOut = 1;
+		
+
 
 		if(llopen(ll)==-1) {
 			fprintf(stderr, "Could not initialize link layer connection\n");
 			exit(1);
    		}
+
+		clock_gettime(CLOCK_REALTIME, &progStart);
+
 
 		printf("connection opened\n");
 		fflush(stdout);
@@ -90,11 +99,16 @@ int main(int argc, char *argv[]) {
 				break;
 			}
 
-			usleep(100); //0.1ms
+			usleep(TRANSMISSION_TIME_ms*1000); //250ms
 		}
 		// close connection
+		clock_gettime(CLOCK_REALTIME, &progEnd);
+		printf("linklayer took %ld ms\n", (progEnd.tv_sec-progStart.tv_sec)*1000 + (progEnd.tv_nsec - progStart.tv_nsec)/1000000);
+
+
 		llclose(1);
 		close(file_desc);
+
 		return 0;
 			
 	}
@@ -106,14 +120,17 @@ int main(int argc, char *argv[]) {
 		struct linkLayer ll;
 		sprintf(ll.serialPort, "%s", argv[1]);
 		ll.role = 1;
-		ll.baudRate = 9600;
+		ll.baudRate = 2400;
 		ll.numTries = 3;
 		ll.timeOut = 1;
+
 
 		if(llopen(ll)==-1) {
 			fprintf(stderr, "Could not initialize link layer connection\n");
 			exit(1);
 		}
+
+		clock_gettime(CLOCK_REALTIME, &progStart);
 
 		char *file_path = argv[3];
 		int file_desc = open(file_path, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
@@ -156,6 +173,9 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		
+		clock_gettime(CLOCK_REALTIME, &progEnd);
+		printf("linklayer took %ld ms\n", (progEnd.tv_sec-progStart.tv_sec)*1000 + (progEnd.tv_nsec - progStart.tv_nsec)/1000000);
+
 		llclose(1);
 		close(file_desc);
 		
