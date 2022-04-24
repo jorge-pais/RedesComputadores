@@ -309,6 +309,8 @@ int transmitter_llclose(int showStatistics){
     free(tx_connectionParameters);
     closeSerialterminal(tx_fd);
 
+    writeEventToFile(tx_stats, &tx_now, "Connection Closed\n");
+
     fclose(tx_stats);
 
     if(showStatistics){

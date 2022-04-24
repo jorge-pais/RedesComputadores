@@ -54,7 +54,7 @@ int receiver_llopen(linkLayer connectionParameters){
         return -1;
     }
 
-    writeEventToFile(rx_stats, &rx_now, "Received UA, connection secured\n");
+    writeEventToFile(rx_stats, &rx_now, "Sent UA, connection secured\n");
     return 1;
 }
 
@@ -250,14 +250,13 @@ int receiver_llclose(int showStatistics){
     }
 
     writeEventToFile(rx_stats, &rx_now, "Received DISC, sending DISC back\n");
-    DEBUG_PRINT("Received DISC, sending DISC back\n");
     
     int res = write(rx_fd, cmdDisc, 5);
     if(res < 0){
         writeEventToFile(rx_stats, &rx_now, "Error writing to serial port\n");
         return -1;
     }
-    DEBUG_PRINT("DISC sent back\n");
+    writeEventToFile(rx_stats, &rx_now, "Sent DISC\n");
 
     if(checkHeader(rx_fd, cmdUA, 5) < 0){
         writeEventToFile(rx_stats, &rx_now, "Error reading from serial port\n");
@@ -267,6 +266,8 @@ int receiver_llclose(int showStatistics){
     free(rx_connectionParameters);
 
     closeSerialterminal(rx_fd);
+
+    writeEventToFile(rx_stats, &rx_now, "Connection Closed\n");
 
     fclose(rx_stats);
 
