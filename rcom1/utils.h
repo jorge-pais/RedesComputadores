@@ -38,7 +38,7 @@ int checkHeader(int fd, u_int8_t *cmd, int cmdLen);
 
 /*
 Tries to read and then output the control field of a
-supervision frame header (RR or REJ)
+supervision or control frame header
 
 Return values:
     frame control field - the header was read successfully

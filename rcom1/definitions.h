@@ -27,7 +27,8 @@
 
 //testing controls - uncomment to use
 /* #define testing
-#define test_data_corruption 4
-#define test_missing_su_frame 4 */
+#define test_data_corruption 4 //BCC2
+#define test_missing_su_frame 4 //BCC1
+ */
 
 #endif

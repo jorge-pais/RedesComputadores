@@ -257,7 +257,7 @@ int transmitter_llclose(int showStatistics){
         fclose(tx_stats);
         return -1;
     }
-    writeEventToFile(tx_stats, &tx_now, "Sent SET\n");
+    writeEventToFile(tx_stats, &tx_now, "Sent DISC\n");
     DEBUG_PRINT("Disconnect command sent\n");
 
     int timeoutCount = 0;
