@@ -1,0 +1,33 @@
+/dev/ttyS0 tx penguin.gif
+tx mode
+connection opened
+read from file -> write to link layer, 999
+llwrite() took 89 ms
+read from file -> write to link layer, 999
+llwrite() took 89 ms
+read from file -> write to link layer, 999
+llwrite() took 89 ms
+read from file -> write to link layer, 999
+llwrite() took 89 ms
+read from file -> write to link layer, 999
+llwrite() took 89 ms
+read from file -> write to link layer, 999
+llwrite() took 89 ms
+read from file -> write to link layer, 999
+llwrite() took 88 ms
+read from file -> write to link layer, 999
+llwrite() took 88 ms
+read from file -> write to link layer, 999
+llwrite() took 89 ms
+read from file -> write to link layer, 999
+llwrite() took 89 ms
+read from file -> write to link layer, 978
+llwrite() took 89 ms
+App layer: done reading and sending file
+
+######## LINK LAYER STATISTICS ########
+# of I frames sent: 12
+# of total connection timeouts: 1
+# of REJ frames received: 0
+# of retransmitted frames: 0
+Open event log using less? [y/n]

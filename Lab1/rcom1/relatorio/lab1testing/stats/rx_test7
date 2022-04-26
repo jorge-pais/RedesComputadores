@@ -1,0 +1,31 @@
+/dev/ttyS0 rx rx_penguin.gif
+rx mode
+read from link layer -> write to file, 1000 999 999
+llread() took 90 ms
+read from link layer -> write to file, 1000 999 1998
+llread() took 1089 ms
+read from link layer -> write to file, 1000 999 2997
+llread() took 1089 ms
+read from link layer -> write to file, 1000 999 3996
+llread() took 1089 ms
+read from link layer -> write to file, 1000 999 4995
+llread() took 1089 ms
+read from link layer -> write to file, 1000 999 5994
+llread() took 1089 ms
+read from link layer -> write to file, 1000 999 6993
+llread() took 1088 ms
+read from link layer -> write to file, 1000 999 7992
+llread() took 1088 ms
+read from link layer -> write to file, 1000 999 8991
+llread() took 1089 ms
+read from link layer -> write to file, 1000 999 9990
+llread() took 87 ms
+read from link layer -> write to file, 979 978 10968
+llread() took 87 ms
+App layer: done receiving file
+
+######## LINK LAYER STATISTICS ########
+# of I frames received: 12 
+# of REJ frames sent: 0 
+# of duplicate frames received: 0 
+Open event log using less? [y/n]

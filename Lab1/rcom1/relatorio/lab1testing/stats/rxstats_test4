@@ -1,0 +1,72 @@
+[16:16:45] llopen() called
+[16:16:46] Received SET, sending UA
+[16:16:46] Received UA, connection secured
+
+[16:16:46] llread() called
+[16:16:46] New I frame received
+[16:16:46] BCC2 check passed, sending RR
+[16:16:46] Writing read data to packet
+
+[16:16:46] llread() called
+[16:16:47] New I frame received
+[16:16:47] BCC2 check passed, sending RR
+[16:16:47] Writing read data to packet
+
+[16:16:47] llread() called
+[16:16:48] Didn't receive I frame
+
+[16:16:48] llread() called
+[16:16:48] New I frame received
+[16:16:48] BCC2 check passed, sending RR
+[16:16:48] Writing read data to packet
+
+[16:16:48] llread() called
+[16:16:49] Didn't receive I frame
+
+[16:16:49] llread() called
+[16:16:49] New I frame received
+[16:16:49] BCC2 check passed, sending RR
+[16:16:49] Writing read data to packet
+
+[16:16:49] llread() called
+[16:16:50] New I frame received
+[16:16:50] BCC2 check passed, sending RR
+[16:16:50] Writing read data to packet
+
+[16:16:50] llread() called
+[16:16:51] New I frame received
+[16:16:51] BCC2 check passed, sending RR
+[16:16:51] Writing read data to packet
+
+[16:16:51] llread() called
+[16:16:52] New I frame received
+[16:16:53] BCC2 check passed, sending RR
+[16:16:53] Writing read data to packet
+
+[16:16:53] llread() called
+[16:16:54] New I frame received
+[16:16:54] BCC2 check passed, sending RR
+[16:16:54] Writing read data to packet
+
+[16:16:54] llread() called
+[16:16:55] New I frame received
+[16:16:55] BCC2 check passed, sending RR
+[16:16:55] Writing read data to packet
+
+[16:16:55] llread() called
+[16:16:56] New I frame received
+[16:16:56] BCC2 check passed, sending RR
+[16:16:56] Writing read data to packet
+
+[16:16:56] llread() called
+[16:16:57] New I frame received
+[16:16:57] BCC2 check passed, sending RR
+[16:16:57] Writing read data to packet
+
+[16:16:57] llread() called
+[16:16:58] New I frame received
+[16:16:58] BCC2 check passed, sending RR
+[16:16:58] Writing read data to packet
+
+[16:16:58] llclose() called
+[16:16:58] Received DISC, sending DISC back

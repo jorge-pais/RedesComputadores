@@ -1,0 +1,58 @@
+[16:05:16] llopen() called
+[16:05:16] Sending SET command
+[16:05:17] Connection timeout
+[16:05:17] Sending SET command again
+[16:05:17] Connection established
+
+[16:05:17] llwrite() called
+[16:05:17] Written 1012 bytes to serial port
+[16:05:18] Received RR
+
+[16:05:19] llwrite() called
+[16:05:19] Written 1013 bytes to serial port
+[16:05:19] Received RR
+
+[16:05:20] llwrite() called
+[16:05:20] Written 1014 bytes to serial port
+[16:05:20] Received RR
+
+[16:05:21] llwrite() called
+[16:05:21] Written 1010 bytes to serial port
+[16:05:21] Received RR
+
+[16:05:22] llwrite() called
+[16:05:22] Written 1015 bytes to serial port
+[16:05:23] Received RR
+
+[16:05:24] llwrite() called
+[16:05:24] Written 1013 bytes to serial port
+[16:05:24] Received RR
+
+[16:05:25] llwrite() called
+[16:05:25] Written 1007 bytes to serial port
+[16:05:25] Received RR
+
+[16:05:26] llwrite() called
+[16:05:26] Written 1008 bytes to serial port
+[16:05:26] Received RR
+
+[16:05:27] llwrite() called
+[16:05:27] Written 1011 bytes to serial port
+[16:05:28] Received RR
+
+[16:05:29] llwrite() called
+[16:05:29] Written 1011 bytes to serial port
+[16:05:29] Received RR
+
+[16:05:30] llwrite() called
+[16:05:30] Written 999 bytes to serial port
+[16:05:30] Received RR
+
+[16:05:31] llwrite() called
+[16:05:31] Written 7 bytes to serial port
+[16:05:31] Received RR
+
+[16:05:31] llclose() called
+[16:05:31] Sent SET
+[16:05:31] Received DISC, sending UA
+[16:05:31] UA control sent

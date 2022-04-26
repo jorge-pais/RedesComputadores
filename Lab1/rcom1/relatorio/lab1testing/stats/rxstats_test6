@@ -1,0 +1,66 @@
+[16:17:47] llopen() called
+[16:17:48] Received SET, sending UA
+[16:17:48] Received UA, connection secured
+
+[16:17:48] llread() called
+[16:17:48] New I frame received
+[16:17:48] BCC2 check passed, sending RR
+[16:17:48] Writing read data to packet
+
+[16:17:48] llread() called
+[16:17:49] New I frame received
+[16:17:49] BCC2 check passed, sending RR
+[16:17:49] Writing read data to packet
+
+[16:17:49] llread() called
+[16:17:50] New I frame received
+[16:17:51] BCC2 check passed, sending RR
+[16:17:51] Writing read data to packet
+
+[16:17:51] llread() called
+[16:17:52] New I frame received
+[16:17:52] BCC2 check passed, sending RR
+[16:17:52] Writing read data to packet
+
+[16:17:52] llread() called
+[16:17:53] New I frame received
+[16:17:53] BCC2 check passed, sending RR
+[16:17:53] Writing read data to packet
+
+[16:17:53] llread() called
+[16:17:54] New I frame received
+[16:17:54] BCC2 check passed, sending RR
+[16:17:54] Writing read data to packet
+
+[16:17:54] llread() called
+[16:17:55] New I frame received
+[16:17:55] BCC2 check passed, sending RR
+[16:17:55] Writing read data to packet
+
+[16:17:55] llread() called
+[16:17:56] New I frame received
+[16:17:56] BCC2 check passed, sending RR
+[16:17:56] Writing read data to packet
+
+[16:17:56] llread() called
+[16:17:57] New I frame received
+[16:17:57] BCC2 check passed, sending RR
+[16:17:57] Writing read data to packet
+
+[16:17:57] llread() called
+[16:17:58] New I frame received
+[16:17:58] BCC2 check passed, sending RR
+[16:17:58] Writing read data to packet
+
+[16:17:58] llread() called
+[16:17:59] New I frame received
+[16:17:59] BCC2 check passed, sending RR
+[16:17:59] Writing read data to packet
+
+[16:17:59] llread() called
+[16:18:00] New I frame received
+[16:18:00] BCC2 check passed, sending RR
+[16:18:00] Writing read data to packet
+
+[16:18:00] llclose() called
+[16:18:00] Received DISC, sending DISC back
