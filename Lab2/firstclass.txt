@@ -1,0 +1,7 @@
+Q1: telnet
+
+Q2: using less /etc/services
+telnet is on port 23
+smtp is on port 25
+pop3 is on port 110
+ftp is on port 21
