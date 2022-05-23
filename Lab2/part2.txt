@@ -1,0 +1,34 @@
+Exp1:
+
+tux21 = gnu22; tux24 = gnu23
+subnet mask = 255.255.255.0
+ip1 = 172.16.20.1; ip4 = 172.16.20.254
+mac1 = 00:21:5a:5a:76:a8; mac4 = 00:21:5a:5a:78:c7
+
+Q1 : ARP packets are used for address resolution, so that a machine trying to access
+another through its IP address knows to what physical address it has to send.
+Q2 : 
+Q3 : it generates ICMP packets
+Q4 : they're the IP and MAC addresses of the two tux machine
+Q5 : we can determine the protocol through the protocol parameter of the IP header
+Q6 : through the frame.len parameter
+Q7 :
+
+Exp2:
+tux21=gnu22; tux22 = gnu23; tux24 = gnu24;
+mac2 = 00:21:5a:5a:78:c7
+no switch:
+port1 = tux21up; port2 = tux22up; port4 = tux24up; 
+
+Q1: slide 44
+Q2: 2 because there are 2 vlans
+
+Exp3:
+tux24.eth0: IP-172.16.20.254 MAC-00:22:64:a7:26:a2
+tux24.eth1: IP-172.16.21.253 MAC-00:e0:7d:c8:7c:55
+port1 = tux21eth0; port2 = tux22eth0; port4 = tux24eth0; port3 = tux24eth1
+
+Q1:  
+
+CONFIGS NO SWITCH:
+

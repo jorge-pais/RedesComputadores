@@ -1,0 +1,7 @@
+x is the bench number (2)
+Creating an ethernet VLAN :
+
+configure terminal
+vlan x0
+end
+show vlan id 20

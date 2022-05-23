@@ -1,5 +1,5 @@
 CC = gcc
-C_FLAGS = -g -Wall -pipe 
+C_FLAGS = -g -Wall -pipe
 
 # compile to object files and compile along side main.c
 # also copy linklayer.h, to prevent having two different definitions
