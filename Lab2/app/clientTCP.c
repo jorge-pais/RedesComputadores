@@ -38,6 +38,8 @@ int main(int argc, char** argv){
 		perror("connect()");
 		exit(0);
 	}
+
+	
 	/*send a string to the server*/
 	bytes = write(sockfd, buf, strlen(buf));
 	printf("Bytes escritos %d\n", bytes);

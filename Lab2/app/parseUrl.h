@@ -1,13 +1,10 @@
 #ifndef PARSEURL_H
 #define PARSEURL_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 #include "defines.h"
+#include "mainApp.h"
 
-typedef struct
+typedef struct url_t_
 {
     char username [NAME_SIZE];
     char password [NAME_SIZE];
@@ -22,7 +19,13 @@ typedef struct
 Return Values:
     0- success
     1- invalid string or error
-*/
+*/  
 u_int8_t parseUrl(char *str, int strLen, url_t *out);
+
+/* 
+    Creates a new url_t structure, zero'd out.
+*/
+url_t newUrl();
+
 
 #endif

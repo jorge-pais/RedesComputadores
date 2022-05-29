@@ -1,11 +1,10 @@
-#include "parseUrl.h"
+#include "mainApp.h"
 
 u_int8_t parseUrl(char *str, int strLen, url_t *out){
 
     // ftp://<user>:<password>@<host>/<url-path>
     // ftp://<host>/<url-path>
 
-    url_t output;
     char *index, *aux; 
     int len;
     
@@ -24,13 +23,15 @@ u_int8_t parseUrl(char *str, int strLen, url_t *out){
         aux = strstr(index, ":");
         if(aux == NULL)
             return 1;
-        len = aux - index ;
+        len = aux - index;
+        if(!len) return 1;
         strncpy(out->username, index, len);
         
         index += len + 1; //advance to password
         
         aux = strstr(index, "@");
         len = aux - index;
+        if(!len) return 1;
         strncpy(out->password, index, len);
 
         index += len + 1;
@@ -43,7 +44,23 @@ u_int8_t parseUrl(char *str, int strLen, url_t *out){
     strncpy(out->host, index, len);
 
     index += len;
-    strcpy(out->filepath, index); // Our code is now unsafe :)
+    strcpy(out->filepath, index+1); // Our code is now unsafe :)
+    
+    aux = strstr(index, "/");
+    while(aux != NULL){
+        index = aux +1;
+        aux = strstr(index, "/");
+    }
+
+    strcpy(out->filename, index);
 
     return 0;
+}
+
+url_t newUrl(){
+
+    url_t out;
+    bzero((char*)&out, sizeof(out));
+
+    return out;
 }
