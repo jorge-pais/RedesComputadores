@@ -1,8 +1,11 @@
 #ifndef PARSEURL_H
 #define PARSEURL_H
 
+#include <stdio.h>
+#include <sys/types.h>
+#include <string.h>
+
 #include "defines.h"
-#include "mainApp.h"
 
 typedef struct url_t_
 {

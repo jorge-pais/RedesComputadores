@@ -1,5 +1,5 @@
-#ifndef MAINAPP_H
-#define MAINAPP_H
+#ifndef UTILS_H
+#define UTILS_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,8 +13,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "parseUrl.h"
-#include "utils.h"
 #include "defines.h"
+#include "parseUrl.h"
+
+u_int8_t getFileFromFTP(url_t* URL, int fileDescriptor);
 
 #endif
