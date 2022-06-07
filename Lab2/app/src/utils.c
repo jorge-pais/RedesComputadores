@@ -158,10 +158,10 @@ u_int8_t getFileFromFTP(url_t* URL, int fileDescriptor){
     */
 
     readReply(sockfd, &buffer);
-    /* if(readReply(sockfd, &buffer) != 150){
+    if(readReply(sockfd, &buffer) != 150){
         fprintf(stderr, "File status error, perhaps the file doesn't exist?\n");
         return 1;
-    } */
+    }
 
     printf("Downloading from %s/%s\n", URL->host, URL->filepath);
 

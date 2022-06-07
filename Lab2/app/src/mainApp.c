@@ -25,6 +25,4 @@ int main(int argc, char *argv[]){
     DEBUG_PRINT("File name: %s, len: %ld\n", in_url.filename, strlen(in_url.filename));
 
     return getFileFromFTP(&in_url, 0);
-
-    return 0; 
 }

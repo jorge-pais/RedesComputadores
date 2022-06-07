@@ -8,7 +8,7 @@ ifconfig eth0 up 172.16.21.1/24
 echo "IP address set"
 
 route add -net 172.16.20.0/24 gw 172.16.21.253
-echo "route to vlan1 added"
+echo "route to vlan0 added"
 
 route add default gw 172.16.21.254
 echo "Default router set"
