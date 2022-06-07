@@ -1,0 +1,8 @@
+root@gnu22:~/Desktop/scripts_redes# ping -c 5 reddit.com
+PING reddit.com (151.101.65.140) 56(84) bytes of data.
+64 bytes from 151.101.65.140 (151.101.65.140): icmp_seq=1 ttl=51 time=17.4 ms
+64 bytes from 151.101.65.140 (151.101.65.140): icmp_seq=2 ttl=51 time=16.4 ms
+64 bytes from 151.101.65.140 (151.101.65.140): icmp_seq=3 ttl=51 time=15.2 ms
+64 bytes from 151.101.65.140 (151.101.65.140): icmp_seq=4 ttl=51 time=15.7 ms
+64 bytes from 151.101.65.140 (151.101.65.140): icmp_seq=5 ttl=51 time=15.0 ms
+

@@ -14,13 +14,13 @@ u_int8_t parseUrl(char *str, int strLen, url_t *out){
         return 1; 
     index += 6; // Advance 6 bytes
         
-    aux = strstr(index, "@");
+    aux = strchr(index, '@');
     if(aux == NULL){ // There's no user/password 
         sprintf(out->username, "anonymous");
         sprintf(out->password, "password");
     }
     else{
-        aux = strstr(index, ":");
+        aux = strchr(index, ':');
         if(aux == NULL)
             return 1;
         len = aux - index;
@@ -29,7 +29,7 @@ u_int8_t parseUrl(char *str, int strLen, url_t *out){
         
         index += len + 1; //advance to password
         
-        aux = strstr(index, "@");
+        aux = strchr(index, '@');
         len = aux - index;
         if(!len) return 1;
         strncpy(out->password, index, len);

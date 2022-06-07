@@ -56,7 +56,7 @@ u_int8_t getFileFromFTP(url_t* URL, int fileDescriptor){
         return 1;
     }
     char *ip_str = inet_ntoa(*(struct in_addr*) h->h_addr);
-    printf("Host IP address: %s\n", ip_str);
+    DEBUG_PRINT("Host IP address: %s\n", ip_str);
 
     //Code borrowed from clientTCP.c, initialize tcp connection 
     bzero((char*)&server_addr, sizeof(server_addr));
@@ -158,10 +158,12 @@ u_int8_t getFileFromFTP(url_t* URL, int fileDescriptor){
     */
 
     readReply(sockfd, &buffer);
-    /* if( != 150){
+    /* if(readReply(sockfd, &buffer) != 150){
         fprintf(stderr, "File status error, perhaps the file doesn't exist?\n");
         return 1;
     } */
+
+    printf("Downloading from %s/%s\n", URL->host, URL->filepath);
 
     FILE *downloadedFile = fopen(URL->filename, "w");
     if(downloadedFile == NULL){
@@ -175,6 +177,7 @@ u_int8_t getFileFromFTP(url_t* URL, int fileDescriptor){
 
         fwrite(buffer, readBytes, 1, downloadedFile);
     }
+    printf("Download finished\n");
 
     fclose(downloadedFile);
     close(passive_sockfd);
